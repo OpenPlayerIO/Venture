@@ -12,7 +12,7 @@ namespace PlayerIOClient
     /// </summary>
     public static class PlayerIO
     {
-        public static string Version => "1.0.0"; // major.minor.patch
+        public static string LibraryVersion => "1.0.1"; // Venture version (major.minor.patch)
 
         /// <summary>
         /// Authenticate with SimpleUsers.
@@ -59,7 +59,7 @@ namespace PlayerIOClient
                 ConnectionId = connectionId,
                 AuthenticationArguments = DictionaryEx.Convert(authenticationArguments ?? new Dictionary<string, string>()),
                 PlayerInsightSegments = playerInsightSegments?.ToList() ?? new List<string>(),
-                ClientAPI = "csharp-venture",
+                ClientAPI = $"csharp",
                 ClientInfo = DictionaryEx.Convert(PlayerIOAuth.GetClientInfo()),
                 PlayCodes = new List<string>()
             });

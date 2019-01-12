@@ -2,13 +2,12 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Linq;
+using Flurl.Http;
+using ProtoBuf;
 
 namespace PlayerIOClient
 {
-    using Flurl.Http;
-    using ProtoBuf;
-    using System.Linq;
-
     internal class PlayerIOChannel
     {
         public string Token { get; set; }
