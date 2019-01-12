@@ -22,6 +22,39 @@ namespace PlayerIOClient
             this.Channel = channel;
         }
 
+        /// <summary> Lists the currently running multiplayer rooms. </summary>
+        /// <param name="roomType"> The type of the rooms you wish to list. </param>
+        /// <param name="searchCriteria">
+        /// Only rooms with the same values in their roomData will be returned.
+        /// </param>
+        /// <param name="resultLimit">
+        /// The maximum amount of rooms you want to receive. Use 0 for 'as many as possible'.
+        /// </param>
+        /// <param name="resultOffset"> Defines the index to show results from. </param>
+        /// <param name="onlyDevRooms">
+        /// Set to 'true' to list rooms from the development room list, rather than from the game's
+        /// global room list.
+        /// </param>
+        public RoomInfo[] ListRooms(string roomType, Dictionary<string, string> searchCriteria, int resultLimit, int resultOffset, bool onlyDevRooms = false)
+        {
+            var (success, response, error) = new PlayerIOChannel().Request<ListRoomsArgs, ListRoomsOutput>(30, new ListRoomsArgs
+            {
+                RoomType = roomType,
+                SearchCriteria = DictionaryEx.Convert(searchCriteria),
+                ResultLimit = resultLimit,
+                ResultOffset = resultOffset,
+                OnlyDevRooms = onlyDevRooms
+            });
+
+            if (!success)
+                throw new PlayerIOError(error.ErrorCode, error.Message);
+
+            if (response.RoomInfo == null)
+                return new RoomInfo[0];
+
+            return response.RoomInfo;
+        }
+
         /// <summary> Create a multiplayer room on the Player.IO infrastructure. </summary>
         /// <param name="roomId"> The ID you wish to assign to your new room - You can use this to connect to the specific room later as long as it still exists. </param>
         /// <param name="roomType"> The name of the room type you wish to run the room as. This value should match one of the [RoomType(...)] attributes of your uploaded code. A room type of 'bounce' is always available. </param>
