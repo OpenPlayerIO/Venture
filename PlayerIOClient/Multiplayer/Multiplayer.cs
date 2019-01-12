@@ -37,7 +37,7 @@ namespace PlayerIOClient
         /// </param>
         public RoomInfo[] ListRooms(string roomType, Dictionary<string, string> searchCriteria, int resultLimit, int resultOffset, bool onlyDevRooms = false)
         {
-            var (success, response, error) = new PlayerIOChannel().Request<ListRoomsArgs, ListRoomsOutput>(30, new ListRoomsArgs
+            var (success, response, error) = this.Channel.Request<ListRoomsArgs, ListRoomsOutput>(30, new ListRoomsArgs
             {
                 RoomType = roomType,
                 SearchCriteria = DictionaryEx.Convert(searchCriteria),

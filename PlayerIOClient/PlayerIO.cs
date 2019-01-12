@@ -12,7 +12,7 @@ namespace PlayerIOClient
     /// </summary>
     public static class PlayerIO
     {
-        public static string LibraryVersion => "1.1.0"; // Venture version (major.minor.patch)
+        private static string LibraryVersion => "1.1.1"; // Venture version (major.minor.patch)
 
         /// <summary>
         /// Authenticate with SimpleUsers.
