@@ -7,15 +7,15 @@ namespace PlayerIOClient
     public class RoomInfo
     {
         [ProtoMember(1)]
-        public string Id { get; set; }
+        public string Id { get; }
 
         [ProtoMember(2)]
-        public string RoomType { get; set; }
+        public string RoomType { get; }
 
         [ProtoMember(3)]
-        public int OnlineUsers { get; set; }
+        public int OnlineUsers { get; }
         
         [ProtoMember(4)]
-        public Dictionary<string, string> RoomData { get; set; }
+        public Dictionary<string, string> RoomData { get; }
     }
 }

@@ -19,6 +19,7 @@ namespace PlayerIOClient
                     {
                         var result = client.BeginConnect(host, port, null, null);
                         var success = result.AsyncWaitHandle.WaitOne(timeout);
+
                         if (success)
                             return true;
 
