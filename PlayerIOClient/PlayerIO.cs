@@ -46,7 +46,10 @@ namespace PlayerIOClient
 
         public static Client Authenticate(string gameId, string connectionId, Dictionary<string, string> authenticationArguments, string[] playerInsightSegments = null)
         {
-            if (authenticationArguments?.ContainsKey("secureSimpleUserPasswordsOverHttp") == true && authenticationArguments["secureSimpleUserPasswordsOverHttp"] == "true")
+            const string securePasswords = "secureSimpleUserPasswordsOverHttp";
+
+            if (authenticationArguments.TryGetValue(securePasswords, out var useSecure) &&
+                useSecure == "true")
             {
                 var (publicKey, nonce) = PlayerIOAuth.SimpleUserGetSecureLoginInfo();
                 authenticationArguments["password"] = PlayerIOAuth.SimpleUserPasswordEncrypt(publicKey, authenticationArguments["password"]);
@@ -144,261 +147,143 @@ namespace PlayerIOClient
             return unixTime + ":" + ToHexString(new HMACSHA256(Encoding.UTF8.GetBytes(sharedSecret)).ComputeHash(Encoding.UTF8.GetBytes(unixTime + ":" + userId)));
         }
     }
-    
-    public class KongregateConnect
+
+    public abstract class BaseConnect
+    {
+        public abstract Client Connect();
+
+        protected virtual void PerformConnectChecks()
+        {
+            if (string.IsNullOrEmpty(this.GameId))
+                throw new ArgumentException(this.Needs(nameof(this.GameId)));
+
+            if (string.IsNullOrEmpty(this.ConnectionId))
+                throw new ArgumentException(this.Needs(nameof(this.ConnectionId)));
+        }
+
+        protected string Needs(string needs) => $"A {needs} must be specified in order to use this method.";
+
+        public string ConnectionId { get; set; }
+        public string GameId { get; set; }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override bool Equals(object obj) => base.Equals(obj);
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override int GetHashCode() => base.GetHashCode();
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override string ToString() => base.ToString();
+    }
+
+    public abstract class TokenConnect : BaseConnect
+    {
+        protected override void PerformConnectChecks()
+        {
+            base.PerformConnectChecks();
+
+            if (string.IsNullOrEmpty(this.Token))
+                throw new ArgumentException(this.Needs(nameof(this.Token)));
+        }
+
+        public string Token { get; set; }
+    }
+
+    public abstract class UserIdConnect : TokenConnect
+    {
+        protected override void PerformConnectChecks()
+        {
+            base.PerformConnectChecks();
+
+            if (string.IsNullOrEmpty(this.UserId))
+                throw new ArgumentException(this.Needs(nameof(this.UserId)));
+        }
+
+        public string UserId { get; set; }
+    }
+
+    public class KongregateConnect : UserIdConnect
     {
         /// <summary>
         /// Authenticate with the Kongregate userId and token provided.
         /// </summary>
-        public Client Connect()
+        public override Client Connect()
         {
-            if (string.IsNullOrEmpty(this.gameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
+            this.PerformConnectChecks();
 
-            if (string.IsNullOrEmpty(this.token))
-                throw new ArgumentException("A Kongregate token must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.userId))
-                throw new ArgumentException("A Kongregate userId must be specified in order to use this method.");
-
-            return PlayerIO.Authenticate(this.gameId, this.connectionId, DictionaryEx.Create(("userId", this.userId), ("gameAuthToken", this.token)));
+            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("userId", this.UserId), ("gameAuthToken", this.Token)));
         }
-
-        public KongregateConnect GameId(string gameId)
-        {
-            this.gameId = gameId;
-            return this;
-        }
-
-        public KongregateConnect Token(string token)
-        {
-            this.token = token;
-            return this;
-        }
-
-        public KongregateConnect UserId(string userId)
-        {
-            this.userId = userId;
-            return this;
-        }
-
-        /// <summary>
-        /// If you are using a distinct connection type, specify it using this method. By default, the connection type will be set to 'public'
-        /// </summary>
-        public KongregateConnect ConnectionId(string connectionId)
-        {
-            this.connectionId = connectionId;
-            return this;
-        }
-
-        private string connectionId { get; set; } = "public";
-        private string gameId { get; set; }
-        private string userId { get; set; }
-        private string token { get; set; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
     }
 
-    public class ArmorGameConnect
+    public class ArmorGameConnect : UserIdConnect
     {
         /// <summary>
         /// Authenticate with the ArmorGams userId and auth token provided.
         /// </summary>
-        public Client Connect()
+        public override Client Connect()
         {
-            if (string.IsNullOrEmpty(this.gameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
+            this.PerformConnectChecks();
 
-            if (string.IsNullOrEmpty(this.token))
-                throw new ArgumentException("An ArmorGames auth token must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.userId))
-                throw new ArgumentException("An ArmorGames userId must be specified in order to use this method.");
-
-            return PlayerIO.Authenticate(this.gameId, this.connectionId, DictionaryEx.Create(("userId", this.userId), ("authToken", this.token)));
+            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("userId", this.UserId), ("authToken", this.Token)));
         }
-
-        public ArmorGameConnect GameId(string gameId)
-        {
-            this.gameId = gameId;
-            return this;
-        }
-
-        public ArmorGameConnect Token(string token)
-        {
-            this.token = token;
-            return this;
-        }
-
-        public ArmorGameConnect UserId(string userId)
-        {
-            this.userId = userId;
-            return this;
-        }
-
-        /// <summary>
-        /// If you are using a distinct connection type, specify it using this method. By default, the connection type will be set to 'public'
-        /// </summary>
-        public ArmorGameConnect ConnectionId(string connectionId)
-        {
-            this.connectionId = connectionId;
-            return this;
-        }
-
-        private string connectionId { get; set; } = "public";
-        private string gameId { get; set; }
-        private string userId { get; set; }
-        private string token { get; set; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
     }
 
-    public class SteamConnect
+    public class SteamConnect : BaseConnect
     {
         /// <summary>
         /// Authenticate with the Steam App ID and Session Ticket provided.
         /// </summary>
-        public Client Connect()
+        public override Client Connect()
         {
-            if (string.IsNullOrEmpty(this.gameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
+            base.PerformConnectChecks();
 
-            if (string.IsNullOrEmpty(this.steamAppId))
-                throw new ArgumentException("A Steam App ID must be specified in order to use this method.");
+            if (string.IsNullOrEmpty(this.SteamAppId))
+                throw new ArgumentException(this.Needs("Steam App ID"));
 
-            if (string.IsNullOrEmpty(this.steamSessionTicket))
-                throw new ArgumentException("A Steam Session Ticket must be specified in order to use this method.");
+            if (string.IsNullOrEmpty(this.SteamSessionTicket))
+                throw new ArgumentException(this.Needs("Steam Session Ticket"));
 
-            return PlayerIO.Authenticate(this.gameId, this.connectionId, DictionaryEx.Create(("steamSessionTicket", this.steamSessionTicket), ("steamAppId", this.steamAppId)));
+            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("steamSessionTicket", this.SteamSessionTicket), ("steamAppId", this.SteamAppId)));
         }
 
-        public SteamConnect GameId(string gameId)
-        {
-            this.gameId = gameId;
-            return this;
-        }
-
-        public SteamConnect SteamSessionTicket(string steamSessionTicket)
-        {
-            this.steamSessionTicket = steamSessionTicket;
-            return this;
-        }
-
-        public SteamConnect SteamAppId(string steamAppId)
-        {
-            this.steamAppId = steamAppId;
-            return this;
-        }
-
-        /// <summary>
-        /// If you are using a distinct connection type, specify it using this method. By default, the connection type will be set to 'public'
-        /// </summary>
-        public SteamConnect ConnectionId(string connectionId)
-        {
-            this.connectionId = connectionId;
-            return this;
-        }
-
-        private string connectionId { get; set; } = "public";
-        private string gameId { get; set; }
-        private string steamAppId { get; set; }
-        private string steamSessionTicket { get; set; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
+        public string SteamAppId { get; set; }
+        public string SteamSessionTicket { get; set; }
     }
 
-    public class FacebookConnect
+    public class FacebookConnect : TokenConnect
     {
         /// <summary>
         /// Authenticate with the Facebook token provided.
         /// </summary>
-        public Client Connect()
+        public override Client Connect()
         {
-            if (string.IsNullOrEmpty(this.gameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
+            base.PerformConnectChecks();
 
-            if (string.IsNullOrEmpty(this.token))
-                throw new ArgumentException("A Facebook token must be specified in order to use this method.");
-
-            return PlayerIO.Authenticate(this.gameId, this.connectionId, DictionaryEx.Create(("accessToken", this.token)));
+            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("accessToken", this.Token)));
         }
-
-        public FacebookConnect GameId(string gameId)
-        {
-            this.gameId = gameId;
-            return this;
-        }
-
-        public FacebookConnect Token(string token)
-        {
-            this.token = token;
-            return this;
-        }
-
-        /// <summary>
-        /// If you are using a distinct connection type, specify it using this method. By default, the connection type will be set to 'public'
-        /// </summary>
-        public FacebookConnect ConnectionId(string connectionId)
-        {
-            this.connectionId = connectionId;
-            return this;
-        }
-
-        private string connectionId { get; set; } = "public";
-        private string gameId { get; set; }
-        private string token { get; set; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
     }
 
-    public class SimpleConnect
+    public class SimpleConnect : BaseConnect
     {
+        public SimpleConnect() => this.ConnectionId = "simpleUsers";
+
         /// <summary>
         /// Authenticate with the password plus the username and/or email provided.
         /// </summary>
-        public Client Connect()
+        public override Client Connect()
         {
-            if (string.IsNullOrEmpty(this.gameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
+            base.PerformConnectChecks();
 
-            if (string.IsNullOrEmpty(this.username) && string.IsNullOrEmpty(this.email))
-                throw new ArgumentException("A username or email must be specified in order to use this method.");
+            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
+                throw new ArgumentException(this.Needs("username or email"));
 
-            if (string.IsNullOrEmpty(this.password))
-                throw new ArgumentException("A password must be specified in order to use this method.");
+            if (string.IsNullOrEmpty(this.Password))
+                throw new ArgumentException(this.Needs("password"));
 
-            return PlayerIO.Authenticate(this.gameId, this.connectionId, DictionaryEx.Create(
-                ("username", this.username),
-                ("email", this.email),
-                ("password", this.password)
+            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
+                ("username", this.Username),
+                ("email", this.Email),
+                ("password", this.Password)
                 ));
         }
 
@@ -409,12 +294,12 @@ namespace PlayerIOClient
         /// <param name="height"> The height of the captcha image. </param>
         public SimpleCaptcha GetSimpleCaptcha(int width, int height)
         {
-            if (string.IsNullOrEmpty(this.gameId))
+            if (string.IsNullOrEmpty(this.GameId))
                 throw new ArgumentException("A game ID must be specified in order to use this method.");
 
             var (success, response, error) = new PlayerIOChannel().Request<SimpleGetCaptchaArgs, SimpleGetCaptchaOutput>(415, new SimpleGetCaptchaArgs
             {
-                GameId = this.gameId,
+                GameId = this.GameId,
                 Width = width,
                 Height = height
             });
@@ -431,20 +316,20 @@ namespace PlayerIOClient
         /// <returns> If the simple user exists already, this method returns <see langword="true"/> </returns>
         public bool RegistrationCheck()
         {
-            if (string.IsNullOrEmpty(this.gameId))
+            if (string.IsNullOrEmpty(this.GameId))
                 throw new ArgumentException("A game ID must be specified in order to use this method.");
 
-            if (string.IsNullOrEmpty(this.username) && string.IsNullOrEmpty(this.email))
+            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
                 throw new ArgumentException("A username or email must be specified in order to use this method.");
 
             var response = true;
 
             try
             {
-                PlayerIO.Authenticate(this.gameId, this.connectionId, DictionaryEx.Create(
+                PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
                     ("checkusername", "true"),
-                    ("username", this.username),
-                    ("email", this.email)
+                    ("username", this.Username),
+                    ("email", this.Email)
                 ));
             }
             catch (PlayerIOError error)
@@ -462,10 +347,10 @@ namespace PlayerIOClient
         /// <returns> If the change was successful, returns <see langword="true"/>. </returns>
         public bool ChangePassword(string newPassword)
         {
-            if (string.IsNullOrEmpty(this.gameId))
+            if (string.IsNullOrEmpty(this.GameId))
                 throw new ArgumentException("A game ID must be specified in order to use this method.");
 
-            if (string.IsNullOrEmpty(this.username) && string.IsNullOrEmpty(this.email))
+            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
                 throw new ArgumentException("A username or email must be specified in order to use this method.");
 
             if (string.IsNullOrEmpty(newPassword))
@@ -475,10 +360,10 @@ namespace PlayerIOClient
 
             try
             {
-                PlayerIO.Authenticate(this.gameId, this.connectionId, DictionaryEx.Create(
+                PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
                     ("changepassword", "true"),
-                    ("username", this.username),
-                    ("email", this.email),
+                    ("username", this.Username),
+                    ("email", this.Email),
                     ("newpassword", newPassword)
                 ));
             }
@@ -493,10 +378,10 @@ namespace PlayerIOClient
 
         public bool ChangeEmail(string newEmail)
         {
-            if (string.IsNullOrEmpty(this.gameId))
+            if (string.IsNullOrEmpty(this.GameId))
                 throw new ArgumentException("A game ID must be specified in order to use this method.");
 
-            if (string.IsNullOrEmpty(this.username) && string.IsNullOrEmpty(this.email))
+            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
                 throw new ArgumentException("A username or email must be specified in order to use this method.");
 
             if (string.IsNullOrEmpty(newEmail))
@@ -506,11 +391,11 @@ namespace PlayerIOClient
 
             try
             {
-                PlayerIO.Authenticate(this.gameId, this.connectionId, DictionaryEx.Create(
+                PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
                     ("changeemail", "true"),
-                    ("username", this.username),
-                    ("email", this.email),
-                    ("password", this.password),
+                    ("username", this.Username),
+                    ("email", this.Email),
+                    ("password", this.Password),
                     ("newemail", newEmail)
                 ));
             }
@@ -523,52 +408,68 @@ namespace PlayerIOClient
             return response;
         }
 
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public static class ConnectionExtensions
+    {
+        public static T WithGameId<T>(this T baseConnect, string gameId) where T : BaseConnect
+        {
+            baseConnect.GameId = gameId;
+            return baseConnect;
+        }
+
         /// <summary>
         /// If you are using a distinct connection type, specify it using this method. By default, the connection type will be set to 'simpleUsers'
         /// </summary>
-        public SimpleConnect ConnectionId(string connectionId)
+        public static T WithConnectionId<T>(this T baseConnect, string connectionId) where T : BaseConnect
         {
-            this.connectionId = connectionId;
-            return this;
+            baseConnect.ConnectionId = connectionId;
+            return baseConnect;
         }
 
-        public SimpleConnect Password(string password)
+        public static T WithToken<T>(this T tokenConnect, string token) where T : TokenConnect
         {
-            this.password = password;
-            return this;
+            tokenConnect.Token = token;
+            return tokenConnect;
         }
 
-        public SimpleConnect GameId(string gameId)
+        public static T WithUserId<T>(this T useridConnect, string userid) where T : UserIdConnect
         {
-            this.gameId = gameId;
-            return this;
-        }
-        
-        public SimpleConnect Username(string username)
-        {
-            this.username = username;
-            return this;
+            useridConnect.UserId = userid;
+            return useridConnect;
         }
 
-        public SimpleConnect Email(string email)
+        public static SimpleConnect WithUsername(SimpleConnect simpleConnect, string username)
         {
-            this.email = email;
-            return this;
+            simpleConnect.Username = username;
+            return simpleConnect;
         }
 
-        private string gameId { get; set; }
-        private string connectionId { get; set; } = "simpleUsers";
-        private string username { get; set; }
-        private string email { get; set; }
-        private string password { get; set; }
+        public static SimpleConnect WithEmail(SimpleConnect simpleConnect, string email)
+        {
+            simpleConnect.Email = email;
+            return simpleConnect;
+        }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
+        public static SimpleConnect WithPassword(SimpleConnect simpleConnect, string password)
+        {
+            simpleConnect.Password = password;
+            return simpleConnect;
+        }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
+        public static SteamConnect SteamSessionTicket(SteamConnect steamConnect, string steamSessionTicket)
+        {
+            steamConnect.SteamSessionTicket = steamSessionTicket;
+            return steamConnect;
+        }
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
+        public static SteamConnect SteamAppId(SteamConnect steamConnect, string steamAppId)
+        {
+            steamConnect.SteamAppId = steamAppId;
+            return steamConnect;
+        }
     }
 }
