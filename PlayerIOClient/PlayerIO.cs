@@ -17,32 +17,27 @@ namespace PlayerIOClient
         /// <summary>
         /// Authenticate with SimpleUsers.
         /// </summary>
-        public static SimpleConnect SimpleConnect
-            => new Lazy<SimpleConnect>(() => new SimpleConnect()).Value;
+        public static SimpleConnect SimpleConnect => new SimpleConnect();
 
         /// <summary>
         /// Authenticate with Facebook.
         /// </summary>
-        public static FacebookConnect FacebookConnect
-            => new Lazy<FacebookConnect>(() => new FacebookConnect()).Value;
+        public static FacebookConnect FacebookConnect => new FacebookConnect();
 
         /// <summary>
         /// Authenticate with Kongregate.
         /// </summary>
-        public static KongregateConnect KongregateConnect
-            => new Lazy<KongregateConnect>(() => new KongregateConnect()).Value;
+        public static KongregateConnect KongregateConnect => new KongregateConnect();
 
         /// <summary>
         /// Authenticate with Armor Games.
         /// </summary>
-        public static ArmorGameConnect ArmorGameConnect
-            => new Lazy<ArmorGameConnect>(() => new ArmorGameConnect()).Value;
+        public static ArmorGameConnect ArmorGameConnect => new ArmorGameConnect();
 
         /// <summary>
         /// Authenticate with Steam.
         /// </summary>
-        public static SteamConnect SteamConnect =>
-            new Lazy<SteamConnect>(() => new SteamConnect()).Value;
+        public static SteamConnect SteamConnect => new SteamConnect();
 
         public static Client Authenticate(string gameId, string connectionId, Dictionary<string, string> authenticationArguments, string[] playerInsightSegments = null)
         {
@@ -442,31 +437,31 @@ namespace PlayerIOClient
             return useridConnect;
         }
 
-        public static SimpleConnect WithUsername(SimpleConnect simpleConnect, string username)
+        public static SimpleConnect WithUsername(this SimpleConnect simpleConnect, string username)
         {
             simpleConnect.Username = username;
             return simpleConnect;
         }
 
-        public static SimpleConnect WithEmail(SimpleConnect simpleConnect, string email)
+        public static SimpleConnect WithEmail(this SimpleConnect simpleConnect, string email)
         {
             simpleConnect.Email = email;
             return simpleConnect;
         }
 
-        public static SimpleConnect WithPassword(SimpleConnect simpleConnect, string password)
+        public static SimpleConnect WithPassword(this SimpleConnect simpleConnect, string password)
         {
             simpleConnect.Password = password;
             return simpleConnect;
         }
 
-        public static SteamConnect SteamSessionTicket(SteamConnect steamConnect, string steamSessionTicket)
+        public static SteamConnect SteamSessionTicket(this SteamConnect steamConnect, string steamSessionTicket)
         {
             steamConnect.SteamSessionTicket = steamSessionTicket;
             return steamConnect;
         }
 
-        public static SteamConnect SteamAppId(SteamConnect steamConnect, string steamAppId)
+        public static SteamConnect SteamAppId(this SteamConnect steamConnect, string steamAppId)
         {
             steamConnect.SteamAppId = steamAppId;
             return steamConnect;
