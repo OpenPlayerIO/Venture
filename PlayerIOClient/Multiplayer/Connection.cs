@@ -494,7 +494,7 @@ namespace PlayerIOClient
         public Message(string type)
         {
             if (string.IsNullOrEmpty(type))
-                throw new ArgumentNullException("type");
+                throw new ArgumentNullException(nameof(type));
 
             this.Type = type;
         }
@@ -502,10 +502,10 @@ namespace PlayerIOClient
         public Message(string type, params object[] parameters)
         {
             if (string.IsNullOrEmpty(type))
-                throw new ArgumentNullException("type");
+                throw new ArgumentNullException(nameof(type));
 
             if (parameters == null)
-                throw new ArgumentNullException("parameters");
+                throw new ArgumentNullException(nameof(parameters));
 
             this.Type = type;
             this.Add(parameters);
@@ -529,10 +529,10 @@ namespace PlayerIOClient
         {
             var sb = new StringBuilder("");
 
-            sb.AppendLine(string.Concat("  msg.Type= ", this.Type, ", ", this.Values.Count, " entries"));
+            sb.AppendLine($"  msg.Type= {this.Type}, {this.Values.Count} entries"));
 
             for (var i = 0; i < this.Values.Count; i++)
-                sb.AppendLine(string.Concat("  msg[", i, "] = ", this.Values[i], "  (", this.Values[i].GetType().Name, ")"));
+                sb.AppendLine($"  msg[{i}] = {this.Values[i]}  ({this.Values[i].GetType().Name})");
 
             return sb.ToString();
         }
