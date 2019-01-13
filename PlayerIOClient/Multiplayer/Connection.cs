@@ -58,11 +58,7 @@ namespace PlayerIOClient
         private BinarySerializer Serializer;
         private BinaryDeserializer Deserializer;
 
-        public void Send(string type, params object[] arguments)
-        {
-            if (this.Socket != null && this.Socket.Connected)
-                this.Socket.Send(Serializer.Serialize(new Message(type, arguments)));
-        }
+        public void Send(string type, params object[] arguments) => this.Send(new Message(type, arguments));
 
         public void Send(Message message)
         {
@@ -529,7 +525,7 @@ namespace PlayerIOClient
         {
             var sb = new StringBuilder("");
 
-            sb.AppendLine($"  msg.Type= {this.Type}, {this.Values.Count} entries"));
+            sb.AppendLine($"  msg.Type= {this.Type}, {this.Values.Count} entries");
 
             for (var i = 0; i < this.Values.Count; i++)
                 sb.AppendLine($"  msg[{i}] = {this.Values[i]}  ({this.Values[i].GetType().Name})");

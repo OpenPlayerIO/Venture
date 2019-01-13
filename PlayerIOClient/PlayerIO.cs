@@ -139,7 +139,11 @@ namespace PlayerIOClient
             }
 
             var unixTime = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
-            return unixTime + ":" + ToHexString(new HMACSHA256(Encoding.UTF8.GetBytes(sharedSecret)).ComputeHash(Encoding.UTF8.GetBytes(unixTime + ":" + userId)));
+
+            using (var hMACSHA256 = new HMACSHA256(Encoding.UTF8.GetBytes(sharedSecret)))
+            {
+                return unixTime + ":" + ToHexString(hMACSHA256.ComputeHash(Encoding.UTF8.GetBytes(unixTime + ":" + userId)));
+            }
         }
     }
 

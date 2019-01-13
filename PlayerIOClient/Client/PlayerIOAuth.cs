@@ -21,15 +21,15 @@ namespace PlayerIOClient
 
         internal static string SimpleUserPasswordEncrypt(byte[] certificateBytes, string password)
         {
-            var rsacryptoServiceProvider = new RSACryptoServiceProvider(new CspParameters
-            {
+            using (var rsacryptoServiceProvider = new RSACryptoServiceProvider(new CspParameters {
                 ProviderType = 1
-            });
-
-            rsacryptoServiceProvider.ImportCspBlob(certificateBytes);
-            var bytes = Encoding.UTF8.GetBytes(password);
-            var inArray = rsacryptoServiceProvider.Encrypt(bytes, false);
-            return Convert.ToBase64String(inArray);
+            }))
+            {
+                rsacryptoServiceProvider.ImportCspBlob(certificateBytes);
+                var bytes = Encoding.UTF8.GetBytes(password);
+                var inArray = rsacryptoServiceProvider.Encrypt(bytes, false);
+                return Convert.ToBase64String(inArray);
+            }
         }
 
         internal static Dictionary<string, string> GetClientInfo()
