@@ -1,5 +1,8 @@
 ﻿namespace PlayerIOClient
 {
+    /// <summary>
+    /// A captcha for use in Simple Users registration.
+    /// </summary>
     public class SimpleCaptcha
     {
         /// <summary>
