@@ -13,11 +13,6 @@ namespace PlayerIOClient
     public static class PlayerIO
     {
         private static string LibraryVersion => "1.1.2"; // Venture version (major.minor.patch)
-      
-        /// <summary>
-        /// Authenticate with SimpleUsers.
-        /// </summary>
-        public static SimpleConnect => new SimpleConnect();
 
         /// <summary>
         /// Authenticate with SimpleUsers.
@@ -28,7 +23,7 @@ namespace PlayerIOClient
                 .WithGameId(gameId)
                 .WithPassword(password)
                 .WithConnectionId(connectionId);
-  
+
             if (usernameOrEmail.Contains("@"))
                 sc.WithEmail(usernameOrEmail);
             else
@@ -40,21 +35,11 @@ namespace PlayerIOClient
         /// <summary>
         /// Authenticate with Facebook.
         /// </summary>
-        public static FacebookConnect FacebookConnect => new FacebookConnect();
-
-        /// <summary>
-        /// Authenticate with Facebook.
-        /// </summary>
         public static FacebookConnect FacebookConnect(string gameId, string accessToken, string connectionId = "public")
             => new FacebookConnect()
             .WithGameId(gameId)
             .WithToken(accessToken)
             .WithConnectionId(connectionId);
-
-        /// <summary>
-        /// Authenticate with Kongregate.
-        /// </summary>
-        public static KongregateConnect KongregateConnect => new KongregateConnect();
 
         /// <summary>
         /// Authenticate with Kongregate.
@@ -69,22 +54,12 @@ namespace PlayerIOClient
         /// <summary>
         /// Authenticate with Armor Games.
         /// </summary>
-        public static ArmorGameConnect ArmorGameConnect => new ArmorGameConnect();
-
-        /// <summary>
-        /// Authenticate with Armor Games.
-        /// </summary>
         public static ArmorGameConnect ArmorGameConnect(string gameId, string userId, string token, string connectionId = "public")
             => new ArmorGameConnect()
             .WithGameId(gameId)
             .WithUserId(userId)
             .WithToken(token)
             .WithConnectionId(connectionId);
-
-        /// <summary>
-        /// Authenticate with Steam.
-        /// </summary>
-        public static SteamConnect SteamConnect => new SteamConnect();
 
         /// <summary>
         /// Authenticate with Steam.
@@ -211,13 +186,13 @@ namespace PlayerIOClient
         protected virtual void PerformConnectChecks()
         {
             if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException(this.Needs(nameof(this.GameId)));
+                throw new ArgumentException(Needs(nameof(this.GameId)));
 
             if (string.IsNullOrEmpty(this.ConnectionId))
-                throw new ArgumentException(this.Needs(nameof(this.ConnectionId)));
+                throw new ArgumentException(Needs(nameof(this.ConnectionId)));
         }
 
-        protected string Needs(string needs) => $"A {needs} must be specified in order to use this method.";
+        protected static string Needs(string needs) => $"A {needs} must be specified in order to use this method.";
 
         public string ConnectionId { get; set; }
         public string GameId { get; set; }
@@ -239,7 +214,7 @@ namespace PlayerIOClient
             base.PerformConnectChecks();
 
             if (string.IsNullOrEmpty(this.Token))
-                throw new ArgumentException(this.Needs(nameof(this.Token)));
+                throw new ArgumentException(Needs(nameof(this.Token)));
         }
 
         public string Token { get; set; }
@@ -252,7 +227,7 @@ namespace PlayerIOClient
             base.PerformConnectChecks();
 
             if (string.IsNullOrEmpty(this.UserId))
-                throw new ArgumentException(this.Needs(nameof(this.UserId)));
+                throw new ArgumentException(Needs(nameof(this.UserId)));
         }
 
         public string UserId { get; set; }
@@ -300,10 +275,10 @@ namespace PlayerIOClient
             base.PerformConnectChecks();
 
             if (string.IsNullOrEmpty(this.SteamAppId))
-                throw new ArgumentException(this.Needs("Steam App ID"));
+                throw new ArgumentException(Needs("Steam App ID"));
 
             if (string.IsNullOrEmpty(this.SteamSessionTicket))
-                throw new ArgumentException(this.Needs("Steam Session Ticket"));
+                throw new ArgumentException(Needs("Steam Session Ticket"));
 
             return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("steamSessionTicket", this.SteamSessionTicket), ("steamAppId", this.SteamAppId)));
         }
@@ -343,10 +318,10 @@ namespace PlayerIOClient
             base.PerformConnectChecks();
 
             if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
-                throw new ArgumentException(this.Needs("username or email"));
+                throw new ArgumentException(Needs("username or email"));
 
             if (string.IsNullOrEmpty(this.Password))
-                throw new ArgumentException(this.Needs("password"));
+                throw new ArgumentException(Needs("password"));
 
             return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
                 ("username", this.Username),
@@ -362,12 +337,12 @@ namespace PlayerIOClient
         /// <param name="height"> The height of the captcha image. </param>
         public static SimpleCaptcha GetSimpleCaptcha(string gameId, int width, int height)
         {
-            if (string.IsNullOrEmpty(this.GameId))
+            if (string.IsNullOrEmpty(gameId))
                 throw new ArgumentException("A game ID must be specified in order to use this method.");
 
             var (success, response, error) = new PlayerIOChannel().Request<SimpleGetCaptchaArgs, SimpleGetCaptchaOutput>(415, new SimpleGetCaptchaArgs
             {
-                GameId = this.GameId,
+                GameId = gameId,
                 Width = width,
                 Height = height
             });
@@ -384,20 +359,20 @@ namespace PlayerIOClient
         /// <returns> If the simple user exists already, this method returns <see langword="true"/> </returns>
         public static bool RegistrationCheck(string gameId, string username, string email, string connectionId = "simpleUsers")
         {
-            if (string.IsNullOrEmpty(this.GameId))
+            if (string.IsNullOrEmpty(gameId))
                 throw new ArgumentException("A game ID must be specified in order to use this method.");
 
-            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
+            if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(email))
                 throw new ArgumentException("A username or email must be specified in order to use this method.");
 
             var response = true;
 
             try
             {
-                PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
+                PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(
                     ("checkusername", "true"),
-                    ("username", this.Username),
-                    ("email", this.Email)
+                    ("username", username),
+                    ("email", email)
                 ));
             }
             catch (PlayerIOError error)
@@ -415,7 +390,7 @@ namespace PlayerIOClient
         /// <returns> If the change was successful, returns <see langword="true"/>. </returns>
         public bool ChangePassword(string newPassword)
         {
-            base.PerformConnectChecks();
+            PerformConnectChecks();
 
             if (string.IsNullOrEmpty(newPassword))
                 throw new ArgumentException("You must specify a new password to use for this method.");
@@ -442,11 +417,7 @@ namespace PlayerIOClient
 
         public bool ChangeEmail(string newEmail)
         {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
-                throw new ArgumentException("A username or email must be specified in order to use this method.");
+            PerformConnectChecks();
 
             if (string.IsNullOrEmpty(newEmail))
                 throw new ArgumentException("You must specify a new email to use for this method.");
