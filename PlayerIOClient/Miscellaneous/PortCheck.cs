@@ -1,5 +1,5 @@
-﻿using System.Net.Sockets;
-using System.Threading;
+﻿using System.Threading;
+using System.Net.Sockets;
 
 namespace PlayerIOClient
 {

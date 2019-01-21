@@ -10,7 +10,14 @@ namespace PlayerIOClient
             this.Segments = DictionaryEx.Convert(state.Segments);
         }
 
+        /// <summary>
+        /// The amount of players online in the entire game.
+        /// </summary>
         public int PlayersOnline { get; }
+
+        /// <summary>
+        /// A dictionary containing the segments for the user.
+        /// </summary>
         public Dictionary<string, string> Segments { get; }
     }
 }

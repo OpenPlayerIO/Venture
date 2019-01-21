@@ -2,12 +2,29 @@
 
 namespace PlayerIOClient
 {
+    /// <summary>
+    /// A Player.IO client with access to various Player.IO services.
+    /// </summary>
     public class Client
     {
+        /// <summary>
+        /// The Player.IO token for this client.
+        /// </summary>
         public string Token { get; internal set; }
+
+        /// <summary>
+        /// The ConnectUserId of this client.
+        /// </summary>
         public string ConnectUserId { get; internal set; }
 
+        /// <summary>
+        /// The property used to access the PlayerInsight service.
+        /// </summary>
         public PlayerInsight PlayerInsight { get; internal set; }
+
+        /// <summary>
+        /// The property used to access the Multiplayer service.
+        /// </summary>
         public Multiplayer Multiplayer { get; }
 
         internal Client(PlayerIOChannel channel)

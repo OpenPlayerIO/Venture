@@ -5,6 +5,9 @@ using System.Net;
 
 namespace PlayerIOClient
 {
+    /// <summary>
+    /// The Player.IO Multiplayer service.
+    /// </summary>
     public class Multiplayer
     {
         /// <summary>

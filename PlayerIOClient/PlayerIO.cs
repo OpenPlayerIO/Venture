@@ -13,11 +13,29 @@ namespace PlayerIOClient
     public static class PlayerIO
     {
         private static string LibraryVersion => "1.1.2"; // Venture version (major.minor.patch)
+      
+        /// <summary>
+        /// Authenticate with SimpleUsers.
+        /// </summary>
+        public static SimpleConnect => new SimpleConnect();
 
         /// <summary>
         /// Authenticate with SimpleUsers.
         /// </summary>
-        public static SimpleConnect SimpleConnect => new SimpleConnect();
+        public static SimpleConnect SimpleConnect(string gameId, string usernameOrEmail, string password, string connectionId = "simpleUsers")
+        {
+            var sc = new SimpleConnect()
+                .WithGameId(gameId)
+                .WithPassword(password)
+                .WithConnectionId(connectionId);
+  
+            if (usernameOrEmail.Contains("@"))
+                sc.WithEmail(usernameOrEmail);
+            else
+                sc.WithUsername(usernameOrEmail);
+
+            return sc;
+        }
 
         /// <summary>
         /// Authenticate with Facebook.
@@ -25,9 +43,28 @@ namespace PlayerIOClient
         public static FacebookConnect FacebookConnect => new FacebookConnect();
 
         /// <summary>
+        /// Authenticate with Facebook.
+        /// </summary>
+        public static FacebookConnect FacebookConnect(string gameId, string accessToken, string connectionId = "public")
+            => new FacebookConnect()
+            .WithGameId(gameId)
+            .WithToken(accessToken)
+            .WithConnectionId(connectionId);
+
+        /// <summary>
         /// Authenticate with Kongregate.
         /// </summary>
         public static KongregateConnect KongregateConnect => new KongregateConnect();
+
+        /// <summary>
+        /// Authenticate with Kongregate.
+        /// </summary>
+        public static KongregateConnect KongregateConnect(string gameId, string userId, string token, string connectionId = "public")
+            => new KongregateConnect()
+            .WithGameId(gameId)
+            .WithUserId(userId)
+            .WithToken(token)
+            .WithConnectionId(connectionId);
 
         /// <summary>
         /// Authenticate with Armor Games.
@@ -35,9 +72,29 @@ namespace PlayerIOClient
         public static ArmorGameConnect ArmorGameConnect => new ArmorGameConnect();
 
         /// <summary>
+        /// Authenticate with Armor Games.
+        /// </summary>
+        public static ArmorGameConnect ArmorGameConnect(string gameId, string userId, string token, string connectionId = "public")
+            => new ArmorGameConnect()
+            .WithGameId(gameId)
+            .WithUserId(userId)
+            .WithToken(token)
+            .WithConnectionId(connectionId);
+
+        /// <summary>
         /// Authenticate with Steam.
         /// </summary>
         public static SteamConnect SteamConnect => new SteamConnect();
+
+        /// <summary>
+        /// Authenticate with Steam.
+        /// </summary>
+        public static SteamConnect SteamConnect(string gameId, string appId, string sessionTicket, string connectionId = "public")
+            => new SteamConnect()
+            .WithGameId(gameId)
+            .WithAppId(appId)
+            .WithSessionTicket(sessionTicket)
+            .WithConnectionId(connectionId);
 
         public static Client Authenticate(string gameId, string connectionId, Dictionary<string, string> authenticationArguments, string[] playerInsightSegments = null)
         {
@@ -201,6 +258,9 @@ namespace PlayerIOClient
         public string UserId { get; set; }
     }
 
+    /// <summary>
+    /// Authenticate with Kongregate.
+    /// </summary>
     public class KongregateConnect : UserIdConnect
     {
         /// <summary>
@@ -227,6 +287,9 @@ namespace PlayerIOClient
         }
     }
 
+    /// <summary>
+    /// Authenticate with Steam.
+    /// </summary>
     public class SteamConnect : BaseConnect
     {
         /// <summary>
@@ -249,6 +312,9 @@ namespace PlayerIOClient
         public string SteamSessionTicket { get; set; }
     }
 
+    /// <summary>
+    /// Authenticate with Facebook.
+    /// </summary>
     public class FacebookConnect : TokenConnect
     {
         /// <summary>
@@ -262,6 +328,9 @@ namespace PlayerIOClient
         }
     }
 
+    /// <summary>
+    /// Authenticate with Simple Users.
+    /// </summary>
     public class SimpleConnect : BaseConnect
     {
         public SimpleConnect() => this.ConnectionId = "simpleUsers";
@@ -291,7 +360,7 @@ namespace PlayerIOClient
         /// </summary>
         /// <param name="width"> The width of the captcha image. </param>
         /// <param name="height"> The height of the captcha image. </param>
-        public SimpleCaptcha GetSimpleCaptcha(int width, int height)
+        public static SimpleCaptcha GetSimpleCaptcha(string gameId, int width, int height)
         {
             if (string.IsNullOrEmpty(this.GameId))
                 throw new ArgumentException("A game ID must be specified in order to use this method.");
@@ -313,7 +382,7 @@ namespace PlayerIOClient
         /// Check whether a simple user currently exists with the details provided.
         /// </summary>
         /// <returns> If the simple user exists already, this method returns <see langword="true"/> </returns>
-        public bool RegistrationCheck()
+        public static bool RegistrationCheck(string gameId, string username, string email, string connectionId = "simpleUsers")
         {
             if (string.IsNullOrEmpty(this.GameId))
                 throw new ArgumentException("A game ID must be specified in order to use this method.");
@@ -346,11 +415,7 @@ namespace PlayerIOClient
         /// <returns> If the change was successful, returns <see langword="true"/>. </returns>
         public bool ChangePassword(string newPassword)
         {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
-                throw new ArgumentException("A username or email must be specified in order to use this method.");
+            base.PerformConnectChecks();
 
             if (string.IsNullOrEmpty(newPassword))
                 throw new ArgumentException("You must specify a new password to use for this method.");
@@ -458,14 +523,13 @@ namespace PlayerIOClient
             simpleConnect.Password = password;
             return simpleConnect;
         }
-
-        public static SteamConnect SteamSessionTicket(this SteamConnect steamConnect, string steamSessionTicket)
+        public static SteamConnect WithSessionTicket(this SteamConnect steamConnect, string steamSessionTicket)
         {
             steamConnect.SteamSessionTicket = steamSessionTicket;
             return steamConnect;
         }
 
-        public static SteamConnect SteamAppId(this SteamConnect steamConnect, string steamAppId)
+        public static SteamConnect WithAppId(this SteamConnect steamConnect, string steamAppId)
         {
             steamConnect.SteamAppId = steamAppId;
             return steamConnect;
