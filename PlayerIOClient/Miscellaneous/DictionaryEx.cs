@@ -23,29 +23,9 @@ namespace PlayerIOClient
             => dictionary
             .Where(x => x.Value != null)
             .ToDictionary(x => x.Key, x => x.Value);
-    }
 
-    internal static class ValueObjectEx
-    {
-        internal static ValueObject Create(this ValueObject obj, object value)
-        {
-            switch (value)
-            {
-                case string temp: return new ValueObject(ValueType.String, value);
-                case int temp: return new ValueObject(ValueType.Int, value);
-                case uint temp: return new ValueObject(ValueType.UInt, value);
-                case long temp: return new ValueObject(ValueType.Long, value);
-                case float temp: return new ValueObject(ValueType.Float, value);
-                case double temp: return new ValueObject(ValueType.Double, value);
-                case bool temp: return new ValueObject(ValueType.Bool, value);
-                case byte[] temp: return new ValueObject(ValueType.ByteArray, value);
 
-                case DateTime date: return new ValueObject(ValueType.DateTime, date.ToUnixTime());
-                case DatabaseObject DatabaseObject: return new ValueObject(ValueType.DatabaseObject, DatabaseObject.Properties.ToArray());
-                case DatabaseObject[] DatabaseArray: return new ValueObject(ValueType.DatabaseArray, DatabaseArray.SelectMany(p => p.Properties).ToArray());
-
-                default: throw new ArgumentException($"The type { value.GetType().FullName } is not supported.", nameof(value));
-            }
-        }
+        internal static DateTime FromUnixTime(this long input) => new DateTime(1970, 1, 1).AddMilliseconds((long)input);
+        internal static long ToUnixTime(this DateTime input) => (long)((input - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds);
     }
 }
