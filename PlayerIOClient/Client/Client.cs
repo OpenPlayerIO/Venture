@@ -27,12 +27,18 @@ namespace PlayerIOClient
         /// </summary>
         public Multiplayer Multiplayer { get; }
 
+        /// <summary>
+        /// The property used to access the BigDB service.
+        /// </summary>
+        public BigDB BigDB { get; }
+
         internal Client(PlayerIOChannel channel)
         {
             this.Channel = channel;
             this.Token = channel.Token;
 
             this.Multiplayer = new Multiplayer(channel);
+            this.BigDB = new BigDB(channel);
         }
 
         private PlayerIOChannel Channel { get; }

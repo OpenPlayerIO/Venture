@@ -12,7 +12,7 @@ namespace PlayerIOClient
     /// </summary>
     public static class PlayerIO
     {
-        private static string LibraryVersion => "1.1.2"; // Venture version (major.minor.patch)
+        private static string LibraryVersion => "1.2.0"; // Venture version (major.minor.patch)
 
         /// <summary>
         /// Authenticate with SimpleUsers.
@@ -35,8 +35,8 @@ namespace PlayerIOClient
         /// <summary>
         /// Authenticate with Armor Games.
         /// </summary>
-        public static ArmorGameConnect ArmorGameConnect(string gameId, string userId, string token, string connectionId = "public")
-            => new Lazy<ArmorGameConnect>(() => new ArmorGameConnect(gameId, userId, token, connectionId)).Value;
+        public static ArmorGamesConnect ArmorGamesConnect(string gameId, string userId, string token, string connectionId = "public")
+            => new Lazy<ArmorGamesConnect>(() => new ArmorGamesConnect(gameId, userId, token, connectionId)).Value;
 
         /// <summary>
         /// Authenticate with Steam.
@@ -193,7 +193,7 @@ namespace PlayerIOClient
     /// <summary>
     /// Authenticate with Armor Games.
     /// </summary>
-    public class ArmorGameConnect
+    public class ArmorGamesConnect
     {
         /// <summary>
         /// Authenticate with the ArmorGames userId and auth token provided.
@@ -212,7 +212,7 @@ namespace PlayerIOClient
             return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("userId", this.UserId), ("authToken", this.Token)));
         }
 
-        public ArmorGameConnect(string gameId, string userId, string token, string connectionId = "public")
+        public ArmorGamesConnect(string gameId, string userId, string token, string connectionId = "public")
         {
             this.GameId = gameId;
             this.UserId = userId;

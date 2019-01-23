@@ -19,21 +19,29 @@ namespace PlayerIOClient
             var stream = new MemoryStream();
             Serializer.Serialize(stream, args);
 
-            var response = channel.AllowHttpStatus(HttpStatusCode.OK)
-                                   .WithHeader("playertoken", this.Token)
-                                   .WithTimeout(seconds: 30)
-                                   .Request($"api/{method}")
-                                   .PostAsync(new ByteArrayContent(this.ReadAllBytes(stream))).ReceiveBytes().Result;
-
-            if (this.ReadHeader(new MemoryStream(response)))
+            try
             {
-                return (true, Serializer.Deserialize<TResponse>(new MemoryStream(response.Skip(2).ToArray())), null);
+                var response = channel.AllowHttpStatus(HttpStatusCode.OK)
+                                       .WithHeader("playertoken", this.Token)
+                                       .WithTimeout(seconds: 30)
+                                       .Request($"api/{method}")
+                                       .PostAsync(new ByteArrayContent(this.ReadAllBytes(stream))).ReceiveBytes().Result;
+
+                if (this.ReadHeader(new MemoryStream(response)))
+                {
+                    return (true, Serializer.Deserialize<TResponse>(new MemoryStream(response.Skip(2).ToArray())), null);
+                }
+                else
+                {
+                    var error = Serializer.Deserialize<Error>(new MemoryStream(response.Skip(2).ToArray()));
+
+                    return (false, default(TResponse), new PlayerIOError(error.ErrorCode, error.Message));
+                }
             }
-            else
+            catch
             {
-                var error = Serializer.Deserialize<Error>(new MemoryStream(response.Skip(2).ToArray()));
-
-                return (false, default(TResponse), new PlayerIOError(error.ErrorCode, error.Message));
+                return (false, default(TResponse), 
+                    new PlayerIOError(ErrorCode.GeneralError, "An error occurred while communicating with the Player.IO web service: the request timed out."));
             }
         }
 
