@@ -54,19 +54,23 @@ namespace PlayerIOClient
         private Stream Stream { get; set; }
         private byte[] Buffer { get; set; } = new byte[ushort.MaxValue];
 
-        private BinarySerializer Serializer;
-        private BinaryDeserializer Deserializer;
+        private readonly BinarySerializer Serializer;
+        private readonly BinaryDeserializer Deserializer;
 
         public void Send(string type, params object[] arguments)
         {
+            var serialized = this.Serializer.Serialize(new Message(type, arguments));
+
             if (this.Socket != null && this.Socket.Connected)
-                this.Socket.Send(Serializer.Serialize(new Message(type, arguments)));
+                this.Socket.Send(serialized);
         }
 
         public void Send(Message message)
         {
+            var serialized = this.Serializer.Serialize(message);
+
             if (this.Socket != null && this.Socket.Connected)
-                this.Socket.Send(Serializer.Serialize(message));
+                this.Socket.Send(serialized);
         }
 
         public void Disconnect()
