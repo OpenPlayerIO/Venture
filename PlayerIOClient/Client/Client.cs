@@ -32,6 +32,11 @@ namespace PlayerIOClient
         /// </summary>
         public BigDB BigDB { get; }
 
+        /// <summary>
+        /// The property used to access the ErrorLog service.
+        /// </summary>
+        public ErrorLog ErrorLog { get; }
+
         internal Client(PlayerIOChannel channel)
         {
             this.Channel = channel;
@@ -39,6 +44,7 @@ namespace PlayerIOClient
 
             this.Multiplayer = new Multiplayer(channel);
             this.BigDB = new BigDB(channel);
+            this.ErrorLog = new ErrorLog(channel);
         }
 
         private PlayerIOChannel Channel { get; }
