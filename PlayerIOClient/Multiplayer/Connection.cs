@@ -37,14 +37,13 @@ namespace PlayerIOClient
             this.Socket.Connect(endpoint.Address, endpoint.Port);
 
             this.Stream = new NetworkStream(this.Socket);
-            this.Serializer = new BinarySerializer();
-            this.Deserializer = new BinaryDeserializer();
+            this.MessageDeserializer = new BinaryDeserializer();
 
             this.Stream.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
             this.Socket.Send(new byte[] { 0 });
             this.Send(new Message("join", joinKey));
 
-            this.Deserializer.OnDeserializedMessage += (message) =>
+            this.MessageDeserializer.OnDeserializedMessage += (message) =>
             {
                 OnMessage?.Invoke(this, message);
             };
@@ -53,13 +52,12 @@ namespace PlayerIOClient
         private Socket Socket { get; set; }
         private Stream Stream { get; set; }
         private byte[] Buffer { get; set; } = new byte[ushort.MaxValue];
-
-        private readonly BinarySerializer Serializer;
-        private readonly BinaryDeserializer Deserializer;
+        
+        private readonly BinaryDeserializer MessageDeserializer;
 
         public void Send(string type, params object[] arguments)
         {
-            var serialized = this.Serializer.Serialize(new Message(type, arguments));
+            var serialized = new BinarySerializer().Serialize(new Message(type, arguments));
 
             if (this.Socket != null && this.Socket.Connected)
                 this.Socket.Send(serialized);
@@ -67,7 +65,7 @@ namespace PlayerIOClient
 
         public void Send(Message message)
         {
-            var serialized = this.Serializer.Serialize(message);
+            var serialized = new BinarySerializer().Serialize(message);
 
             if (this.Socket != null && this.Socket.Connected)
                 this.Socket.Send(serialized);
@@ -105,7 +103,7 @@ namespace PlayerIOClient
                 return;
             }
 
-            this.Deserializer.AddBytes(received);
+            this.MessageDeserializer.AddBytes(received);
             this.Stream.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
         }
 
@@ -129,15 +127,27 @@ namespace PlayerIOClient
     {
         internal enum EnumPattern
         {
-            STRING_SHORT_PATTERN = 0xC0, STRING_PATTERN = 0x0C, BYTE_ARRAY_SHORT_PATTERN = 0x40, BYTE_ARRAY_PATTERN = 0x10,
-            UNSIGNED_LONG_SHORT_PATTERN = 0x38, UNSIGNED_LONG_PATTERN = 0x3C, LONG_SHORT_PATTERN = 0x30, LONG_PATTERN = 0x34,
-            UNSIGNED_INT_SHORT_PATTERN = 0x80, UNSIGNED_INT_PATTERN = 0x08, INT_PATTERN = 0x04, DOUBLE_PATTERN = 0x03,
-            FLOAT_PATTERN = 0x02, BOOLEAN_TRUE_PATTERN = 0x01, BOOLEAN_FALSE_PATTERN = 0x00, DOES_NOT_EXIST = -1
+            STRING_SHORT_PATTERN = 0xC0,
+            STRING_PATTERN = 0x0C,
+            BYTE_ARRAY_SHORT_PATTERN = 0x40,
+            BYTE_ARRAY_PATTERN = 0x10,
+            UNSIGNED_LONG_SHORT_PATTERN = 0x38,
+            UNSIGNED_LONG_PATTERN = 0x3C,
+            LONG_SHORT_PATTERN = 0x30,
+            LONG_PATTERN = 0x34,
+            UNSIGNED_INT_SHORT_PATTERN = 0x80,
+            UNSIGNED_INT_PATTERN = 0x08,
+            INT_PATTERN = 0x04,
+            DOUBLE_PATTERN = 0x03,
+            FLOAT_PATTERN = 0x02,
+            BOOLEAN_TRUE_PATTERN = 0x01,
+            BOOLEAN_FALSE_PATTERN = 0x00,
+            DOES_NOT_EXIST = -1
         }
 
         internal enum EnumState
         {
-            Init, Header, Data
+            INIT, HEADER, DATA
         }
 
         internal delegate void MessageDeserializedEventHandler(Message e);
@@ -146,7 +156,7 @@ namespace PlayerIOClient
         public event MessageDeserializedEventHandler OnDeserializedMessage;
         internal event ValueDeserializedEventHandler OnDeserializedValue;
 
-        internal EnumState State = EnumState.Init;
+        internal EnumState State = EnumState.INIT;
         internal EnumPattern Pattern = EnumPattern.DOES_NOT_EXIST;
 
         internal MemoryStream _buffer;
@@ -183,21 +193,21 @@ namespace PlayerIOClient
                     }
                 }
 
-                State = EnumState.Init;
+                State = EnumState.INIT;
             };
         }
 
         public void AddBytes(byte[] input)
         {
             foreach (var value in input)
-                DeserializeValue(value);
+                this.DeserializeValue(value);
         }
 
         internal void DeserializeValue(byte value)
         {
             switch (State)
             {
-                case EnumState.Init:
+                case EnumState.INIT:
                     Pattern = value.RetrieveFlagPattern();
 
                     switch (Pattern)
@@ -206,60 +216,60 @@ namespace PlayerIOClient
                             _partLength = value.RetrievePartLength(Pattern);
 
                             if (_partLength > 0)
-                                State = EnumState.Data;
+                                State = EnumState.DATA;
                             else
                                 OnDeserializedValue("");
                             break;
                         case EnumPattern.STRING_PATTERN:
                             _partLength = value.RetrievePartLength(Pattern) + 1;
-                            State = EnumState.Header;
+                            State = EnumState.HEADER;
                             break;
                         case EnumPattern.BYTE_ARRAY_SHORT_PATTERN:
                             _partLength = value.RetrievePartLength(Pattern);
 
                             if (_partLength > 0)
-                                State = EnumState.Data;
+                                State = EnumState.DATA;
                             else
                                 OnDeserializedValue(new byte[] { });
                             break;
                         case EnumPattern.BYTE_ARRAY_PATTERN:
                             _partLength = value.RetrievePartLength(Pattern) + 1;
-                            State = EnumState.Header;
+                            State = EnumState.HEADER;
                             break;
                         case EnumPattern.UNSIGNED_INT_SHORT_PATTERN:
                             OnDeserializedValue(value.RetrievePartLength(Pattern));
                             break;
                         case EnumPattern.UNSIGNED_INT_PATTERN:
                             _partLength = value.RetrievePartLength(Pattern) + 1;
-                            State = EnumState.Data;
+                            State = EnumState.DATA;
                             break;
                         case EnumPattern.INT_PATTERN:
                             _partLength = value.RetrievePartLength(Pattern) + 1;
-                            State = EnumState.Data;
+                            State = EnumState.DATA;
                             break;
                         case EnumPattern.UNSIGNED_LONG_SHORT_PATTERN:
                             _partLength = 1;
-                            State = EnumState.Data;
+                            State = EnumState.DATA;
                             break;
                         case EnumPattern.UNSIGNED_LONG_PATTERN:
                             _partLength = 6;
-                            State = EnumState.Data;
+                            State = EnumState.DATA;
                             break;
                         case EnumPattern.LONG_SHORT_PATTERN:
                             _partLength = 1;
-                            State = EnumState.Data;
+                            State = EnumState.DATA;
                             break;
                         case EnumPattern.LONG_PATTERN:
                             _partLength = 6;
-                            State = EnumState.Data;
+                            State = EnumState.DATA;
                             break;
                         case EnumPattern.DOUBLE_PATTERN:
                             _partLength = 8;
-                            State = EnumState.Data;
+                            State = EnumState.DATA;
                             break;
                         case EnumPattern.FLOAT_PATTERN:
                             _partLength = 4;
-                            State = EnumState.Data;
+                            State = EnumState.DATA;
                             break;
                         case EnumPattern.BOOLEAN_TRUE_PATTERN:
                             OnDeserializedValue(true);
@@ -270,7 +280,7 @@ namespace PlayerIOClient
                     }
                     break;
 
-                case EnumState.Header:
+                case EnumState.HEADER:
                     _buffer.WriteByte(value);
 
                     if (_buffer.Position == _partLength)
@@ -279,12 +289,12 @@ namespace PlayerIOClient
                         var length = new List<byte>(4) { 0, 0, 0, 0 }.Select((b, index) => index <= _partLength - 1 ? buffer[index] : (byte)0);
 
                         _partLength = BitConverter.ToInt32(length.ToArray(), 0);
-                        State = EnumState.Data;
+                        State = EnumState.DATA;
 
                         _buffer.Position = 0;
                     }
                     break;
-                case EnumState.Data:
+                case EnumState.DATA:
                     _buffer.WriteByte(value);
 
                     if (_buffer.Position == _partLength)
@@ -344,11 +354,11 @@ namespace PlayerIOClient
         {
             byte[] output;
 
-            SerializeValue(message.Count);
-            SerializeValue(message.Type);
+            this.SerializeValue(message.Count);
+            this.SerializeValue(message.Type);
 
             foreach (var value in message)
-                SerializeValue(value);
+                this.SerializeValue(value);
 
             output = _buffer.ToArray();
             _buffer = new MemoryStream();
