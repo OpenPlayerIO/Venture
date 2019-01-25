@@ -76,6 +76,9 @@ namespace PlayerIOClient
         /// <summary> Retrieve the oobject stored in the mesage at the given index. </summary>
         public object this[uint index] => this.Values[(int)index];
 
+        /// <summary> Retrieve an object at the given index and return it as type T </summary> <typeparam name="T">The type to cast to and return</typeparam> <param name="index"> The index to find the entry in </param>
+        public T Get<T>(uint index) => (T)Convert.ChangeType(this[index], typeof(T));
+
         /// <summary> Retrieve the string at the given index </summary> <param name="index"> The index to find the entry in </param>
         public string GetString(uint index) => (string)this[index];
 
