@@ -52,10 +52,7 @@ namespace PlayerIOClient
             if (string.IsNullOrEmpty(type))
                 throw new Exception("You must specify a type for the PlayerIO message.");
 
-            var message = new Message(type);
-                message.Add(parameters);
-
-            return message;
+            return new Message(type, parameters);
         }
 
         public IEnumerator<object> GetEnumerator() => this.Values.GetEnumerator();
@@ -73,7 +70,7 @@ namespace PlayerIOClient
             return sb.ToString();
         }
 
-        /// <summary> Retrieve the oobject stored in the mesage at the given index. </summary>
+        /// <summary> Retrieve the object stored in the message at the given index. </summary>
         public object this[uint index] => this.Values[(int)index];
 
         /// <summary> Retrieve an object at the given index and return it as type T </summary> <typeparam name="T">The type to cast to and return</typeparam> <param name="index"> The index to find the entry in </param>
