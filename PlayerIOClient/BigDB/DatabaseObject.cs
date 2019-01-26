@@ -35,16 +35,68 @@ namespace PlayerIOClient
         /// </summary>
         public Dictionary<string, object> Properties { get; set; }
 
-        protected PlayerIOError WrongType(string attemptedType, ValueType actualType)
+        public object this[string prop] => Properties.ContainsKey(prop) ? Properties[prop] : null;
+        public object this[string prop, Type type] => Get(prop, type);
+        private object Get(string prop, Type type)
         {
-            return new PlayerIOError(ErrorCode.GeneralError, string.Concat(new object[]
-            {
-                "The value is not ",
-                attemptedType,
-                ", it's type is: ",
-                actualType
-            }));
+            if (!Properties.ContainsKey(prop) || Properties[prop] == null)
+                throw new PlayerIOError(ErrorCode.GeneralError, (GetType() == typeof(DatabaseArray) ? "The array does not have an entry at: " : "Property does not exist: ") + prop);
+
+            if (Properties[prop].GetType() != type)
+                throw new PlayerIOError(ErrorCode.GeneralError, $"No property found with the type '{ type.Name }'.");
+
+            return Properties[prop];
         }
+
+        public virtual DatabaseObject Set(string property, object value)
+        {
+            var allowedTypes = new List<Type>()
+            {
+                typeof(string), typeof(int),    typeof(uint),
+                typeof(long),   typeof(ulong),  typeof(float),
+                typeof(double), typeof(bool),   typeof(byte[]),
+                typeof(DatabaseObject), typeof(DatabaseArray)
+            };
+
+            if (value != null && !allowedTypes.Contains(value.GetType()))
+                throw new PlayerIOError(ErrorCode.GeneralError, $"The type '{ value.GetType().Name }' is not allowed.");
+
+            this.Properties.Add(property, value);
+            return this;
+        }
+
+        public bool GetBool(string prop) => (bool)this[prop, typeof(bool)];
+        public bool GetBool(string prop, bool defaultValue) => this[prop] is bool value ? value : defaultValue;
+
+        public byte[] GetBytes(string prop) => (byte[])this[prop, typeof(byte[])];
+        public byte[] GetBytes(string prop, byte[] defaultValue) => this[prop] is byte[] value ? value : defaultValue;
+
+        public double GetDouble(string prop) => (double)this[prop, typeof(double)];
+        public double GetDouble(string prop, double defaultValue) => this[prop] is double value ? value : defaultValue;
+
+        public float GetFloat(string prop) => (float)this[prop, typeof(float)];
+        public float GetFloat(string prop, float defaultValue) => this[prop] is float value ? value : defaultValue;
+
+        public int GetInt(string prop) => (int)this[prop, typeof(int)];
+        public int GetInt(string prop, int defaultValue) => this[prop] is int value ? value : defaultValue;
+
+        public uint GetUInt(string prop) => (uint)this[prop, typeof(uint)];
+        public uint GetUInt(string prop, uint defaultValue) => this[prop] is uint value ? value : defaultValue;
+
+        public long GetLong(string prop) => (long)this[prop, typeof(long)];
+        public long GetLong(string prop, long defaultValue) => this[prop] is long value ? value : defaultValue;
+
+        public string GetString(string prop) => (string)this[prop, typeof(string)];
+        public string GetString(string prop, string defaultValue) => this[prop] is string value ? value : defaultValue;
+
+        public DateTime GetDateTime(string prop) => (DateTime)this[prop, typeof(DateTime)];
+        public DateTime GetDateTime(string prop, DateTime defaultValue) => this[prop] is DateTime value ? value : defaultValue;
+
+        public DatabaseObject GetObject(string prop) => (DatabaseObject)this[prop, typeof(DatabaseObject)];
+        public DatabaseObject GetObject(string prop, DatabaseObject defaultValue) => this[prop] is DatabaseObject value ? value : defaultValue;
+
+        public DatabaseArray GetArray(string prop) => (DatabaseArray)this[prop, typeof(DatabaseArray)];
+        public DatabaseArray GetArray(string prop, DatabaseArray defaultValue) => this[prop] is DatabaseArray value ? value : defaultValue;
 
         public override string ToString()
         {

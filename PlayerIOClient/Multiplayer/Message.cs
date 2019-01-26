@@ -50,7 +50,7 @@ namespace PlayerIOClient
         public static Message Create(string type, params object[] parameters)
         {
             if (string.IsNullOrEmpty(type))
-                throw new Exception("You must specify a type for the PlayerIO message.");
+                throw new ArgumentNullException("You must specify a type for the PlayerIO message.");
 
             return new Message(type, parameters);
         }
