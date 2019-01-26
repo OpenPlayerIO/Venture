@@ -3,7 +3,7 @@
 namespace PlayerIOClient
 {
     [ProtoContract]
-    internal class ArrayProperty
+    public class ArrayProperty
     {
         [ProtoMember(1)]
         public int Index { get; set; }

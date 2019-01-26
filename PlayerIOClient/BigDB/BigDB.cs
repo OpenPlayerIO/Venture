@@ -73,6 +73,26 @@ namespace PlayerIOClient
             }
         }
 
+        public void CreateObject(string table, string key, DatabaseObject dbo)
+        {
+            CreateObjects(new[] { new DatabaseObjectPushModel
+            {
+                Table = table,
+                Key = key,
+                Properties = BigDBExtensions.FromDatabaseObject(dbo)
+            } }, false);
+        }
+
+        internal void CreateObjects(DatabaseObjectPushModel[] objects, bool loadExistWhateverThisMayBe)
+        {
+            Channel.Request<CreateObjectsArgs, CreateObjectsOutput>(82, new CreateObjectsArgs
+            {
+                LoadExisting = loadExistWhateverThisMayBe,
+                Objects = objects
+            });
+        }
+
+
         internal PlayerIOChannel Channel { get; }
     }
 }

@@ -1,39 +1,50 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using Tson.NET;
 
 namespace PlayerIOClient
 {
-    public class DatabaseObject
+    public partial class DatabaseObject : IDictionary<string, object>
     {
-        internal DatabaseObject(BigDB owner, string table, string key, string version, List<ObjectProperty> properties)
+        public DatabaseObject(BigDB owner, string table, string key, string version, List<ObjectProperty> properties)
         {
             this.Owner = owner;
             this.Table = table;
             this.Key = key;
             this.Version = version;
-            this.Properties = (Dictionary<string, object>)BigDBExtensions.ToDictionary(properties);
+            this.Properties = (BigDBExtensions.FromDictionary(BigDBExtensions.ToDictionary(properties)) as DatabaseObject).Properties;
+        }
+
+        public DatabaseObject()
+        {
+            this.Properties = new Dictionary<string, object>();
         }
 
         /// <summary>
         /// The name of the table the object belongs to.
         /// </summary>
-        public string Table { get; }
+        public string Table { get; internal set; }
 
         /// <summary>
         /// The key of the object.
         /// </summary>
-        public string Key { get; set; }
+        public string Key { get; internal set; }
 
         /// <summary>
         /// The version of the object, incremented every save.
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; internal set; }
 
         /// <summary>
         /// The properties of the object.
         /// </summary>
         public Dictionary<string, object> Properties { get; set; }
+
+        public ICollection<object> Values => this.Properties.Values;
+        public ICollection<string> Keys => this.Properties.Keys;
 
         public object this[string prop] => Properties.ContainsKey(prop) ? Properties[prop] : null;
         public object this[string prop, Type type] => Get(prop, type);
@@ -50,12 +61,15 @@ namespace PlayerIOClient
 
         public virtual DatabaseObject Set(string property, object value)
         {
+            if (property.Contains("."))
+                throw new InvalidOperationException("You must not include periods within the property name.");
+
             var allowedTypes = new List<Type>()
             {
                 typeof(string), typeof(int),    typeof(uint),
                 typeof(long),   typeof(ulong),  typeof(float),
                 typeof(double), typeof(bool),   typeof(byte[]),
-                typeof(DatabaseObject), typeof(DatabaseArray)
+                typeof(DateTime), typeof(DatabaseObject), typeof(DatabaseArray)
             };
 
             if (value != null && !allowedTypes.Contains(value.GetType()))
@@ -98,17 +112,60 @@ namespace PlayerIOClient
         public DatabaseArray GetArray(string prop) => (DatabaseArray)this[prop, typeof(DatabaseArray)];
         public DatabaseArray GetArray(string prop, DatabaseArray defaultValue) => this[prop] is DatabaseArray value ? value : defaultValue;
 
+        /// <summary>
+        /// Check whether this object contains the specified property.
+        /// </summary>
+        /// <param name="property"> The name of the property. </param>
+        /// <returns> If the object contains the property, returns true. </returns>
+        public bool ContainsKey(string property) => this.Properties.ContainsKey(property);
+
+        /// <summary>
+        /// Removes a property from this object.
+        /// </summary>
+        /// <param name="property"> The property to remove. </param>
+        /// <returns> If the property has been successfully removed, returns true.  </returns>
+        public bool Remove(string property) => this.Properties.Remove(property);
+
+        /// <summary>
+        /// Removes all properties on this object.
+        /// </summary>
+        public void Clear() => Properties.Clear();
+
+        /// <summary>
+        /// The amount of properties within this object.
+        /// </summary>
+        public int Count => Properties.Count;
+
+        /// <summary>
+        /// Return a TSON string of the current object.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return TsonConvert.SerializeObject(this.Properties, Formatting.Indented);
         }
 
-        internal BigDB Owner { get; }
+        internal BigDB Owner { get; set; }
     }
 
-    internal static class BigDBExtensions
+    public partial class DatabaseObject
     {
-        internal static object ToDictionary(object input)
+        [EditorBrowsable(EditorBrowsableState.Never)] public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex) => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+        [EditorBrowsable(EditorBrowsableState.Never)] public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+        [EditorBrowsable(EditorBrowsableState.Never)] public bool Contains(KeyValuePair<string, object> item) => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+        [EditorBrowsable(EditorBrowsableState.Never)] public bool Remove(KeyValuePair<string, object> item) => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+        [EditorBrowsable(EditorBrowsableState.Never)] public bool TryGetValue(string key, out object value) => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+        [EditorBrowsable(EditorBrowsableState.Never)] public void Add(KeyValuePair<string, object> item) => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+        [EditorBrowsable(EditorBrowsableState.Never)] public void Add(string key, object value) => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+        [EditorBrowsable(EditorBrowsableState.Never)] IEnumerator IEnumerable.GetEnumerator() => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+        [EditorBrowsable(EditorBrowsableState.Never)] public bool IsReadOnly => throw new InvalidOperationException("The requested method is disabled, please use the public methods instead.");
+
+        object IDictionary<string, object>.this[string key] { get => this.Properties[key]; set => this.Properties[key] = value; }
+    }
+
+    public static class BigDBExtensions
+    {
+        public static object ToDictionary(object input)
         {
             var dictionary = new Dictionary<string, object>();
 
@@ -121,7 +178,6 @@ namespace PlayerIOClient
 
                 case ValueObject valueObject:
                     var value = Value(valueObject);
-
                     if (value is List<ObjectProperty> object_properties)
                     {
                         foreach (var property in object_properties)
@@ -143,33 +199,135 @@ namespace PlayerIOClient
                     break;
 
                 case null: return null;
-                default:   return input;
+                default: return input;
             }
 
             return dictionary;
+        }
+
+        public static List<ObjectProperty> FromDatabaseObject(DatabaseObject input)
+        {
+            var model = new List<ObjectProperty>();
+
+            foreach (var kvp in input.Properties.Where(kvp => kvp.Value != null))
+            {
+                if (kvp.Value.GetType() == typeof(DatabaseObject))
+                {
+                    model.Add(new ObjectProperty() { Name = kvp.Key, Value = new ValueObject() { ValueType = ValueType.Object, ObjectProperties = FromDatabaseObject(kvp.Value as DatabaseObject) } });
+                }
+                else if (kvp.Value.GetType() == typeof(DatabaseArray))
+                {
+                    model.Add(new ObjectProperty() { Name = kvp.Key, Value = new ValueObject() { ValueType = ValueType.Array, ArrayProperties = FromDatabaseArray(kvp.Value as DatabaseArray) } });
+                }
+                else
+                {
+                    model.Add(new ObjectProperty() { Name = kvp.Key, Value = Create(kvp.Value) });
+                }
+            }
+
+            return model;
+        }
+
+        public static List<ArrayProperty> FromDatabaseArray(DatabaseArray input)
+        {
+            var model = new List<ArrayProperty>();
+
+            for (var i = 0; i < input.Values.Length; i++)
+            {
+                var value = input.Values[i];
+
+                if (value is DatabaseArray array)
+                {
+                    model.AddRange(FromDatabaseArray(array));
+                }
+                else if (value is DatabaseObject obj)
+                {
+                    model.Add(new ArrayProperty() { Index = i, Value = new ValueObject() { ValueType = ValueType.Object, ObjectProperties = FromDatabaseObject(obj) } });
+                }
+                else
+                {
+                    model.Add(new ArrayProperty() { Index = i, Value = Create(value) });
+                }
+            }
+
+            return model;
+        }
+
+        public static object FromDictionary(object input)
+        {
+            var model = new DatabaseObject();
+
+            if (input is Dictionary<string, object>)
+            {
+                foreach (var kvp in input as Dictionary<string, object>)
+                {
+                    if (kvp.Value is Dictionary<string, object>)
+                    {
+                        model.Set(kvp.Key, FromDictionary(kvp.Value as Dictionary<string, object>));
+                    }
+                    else if (kvp.Value is object[])
+                    {
+                        var array = new DatabaseArray();
+
+                        foreach (var value in kvp.Value as object[])
+                        {
+                            array.Add(FromDictionary(value));
+                        }
+
+                        model.Set(kvp.Key, array);
+                    }
+                    else
+                    {
+                        model.Set(kvp.Key, kvp.Value);
+                    }
+                }
+
+                return model;
+            }
+            else
+            {
+                return input;
+            }
+        }
+
+        internal static ValueObject Create(object value)
+        {
+            switch (value)
+            {
+                case string temp: return new ValueObject { ValueType = ValueType.String, String = temp };
+                case int temp: return new ValueObject { ValueType = ValueType.Int, Int = temp };
+                case uint temp: return new ValueObject { ValueType = ValueType.UInt, UInt = temp };
+                case long temp: return new ValueObject { ValueType = ValueType.Long, Long = temp };
+                case float temp: return new ValueObject { ValueType = ValueType.Float, Float = temp };
+                case double temp: return new ValueObject { ValueType = ValueType.Double, Double = temp };
+                case bool temp: return new ValueObject { ValueType = ValueType.Bool, Bool = temp };
+                case byte[] temp: return new ValueObject { ValueType = ValueType.ByteArray, ByteArray = temp };
+                case DateTime temp: return new ValueObject { ValueType = ValueType.DateTime, DateTime = temp.ToUnixTime() };
+
+                default: throw new ArgumentException($"The type { value.GetType().FullName } is not supported.", nameof(value));
+            }
         }
 
         internal static object Value(this ArrayProperty property) => Value(property.Value);
         internal static object Value(this ObjectProperty property) => Value(property.Value);
         internal static object Value(ValueObject value)
         {
-            switch (value.ValueType) {
-                case ValueType.String:    return value.String;
-                case ValueType.Int:       return value.Int;
-                case ValueType.UInt:      return value.UInt;
-                case ValueType.Long:      return value.Long;
-                case ValueType.Bool:      return value.Bool;
-                case ValueType.Float:     return value.Float;
-                case ValueType.Double:    return value.Double;
+            switch (value.ValueType)
+            {
+                case ValueType.String: return value.String;
+                case ValueType.Int: return value.Int;
+                case ValueType.UInt: return value.UInt;
+                case ValueType.Long: return value.Long;
+                case ValueType.Bool: return value.Bool;
+                case ValueType.Float: return value.Float;
+                case ValueType.Double: return value.Double;
                 case ValueType.ByteArray: return value.ByteArray;
-                case ValueType.DateTime:  return new DateTime(1970, 1, 1).AddMilliseconds(value.DateTime);
-                case ValueType.Array:     return value.ArrayProperties;
-                case ValueType.Object:    return value.ObjectProperties;
+                case ValueType.DateTime: return new DateTime(1970, 1, 1).AddMilliseconds(value.DateTime);
+                case ValueType.Array: return value.ArrayProperties;
+                case ValueType.Object: return value.ObjectProperties;
 
                 default: return null;
             }
         }
-
-
     }
 }
