@@ -118,6 +118,7 @@ namespace PlayerIOClient
                     foreach (var property in databaseObject)
                         dictionary.Add(property.Name, ToDictionary(property.Value));
                     break;
+
                 case ValueObject valueObject:
                     var value = Value(valueObject);
 
@@ -129,7 +130,6 @@ namespace PlayerIOClient
                     else if (value is List<ArrayProperty> array_properties)
                     {
                         var array = new object[array_properties.Count];
-
                         for (var i = 0; i < array_properties.Count; i++)
                             array[i] = ToDictionary(array_properties[i].Value);
 
@@ -141,10 +141,9 @@ namespace PlayerIOClient
                     }
 
                     break;
-                case null:
-                    return null;
-                default:
-                    return input;
+
+                case null: return null;
+                default:   return input;
             }
 
             return dictionary;
@@ -154,30 +153,19 @@ namespace PlayerIOClient
         internal static object Value(this ObjectProperty property) => Value(property.Value);
         internal static object Value(ValueObject value)
         {
-            switch (value.ValueType)
-            {
-                case ValueType.String:
-                    return value.String;
-                case ValueType.Int:
-                    return value.Int;
-                case ValueType.UInt:
-                    return value.UInt;
-                case ValueType.Long:
-                    return value.Long;
-                case ValueType.Bool:
-                    return value.Bool;
-                case ValueType.Float:
-                    return value.Float;
-                case ValueType.Double:
-                    return value.Double;
-                case ValueType.ByteArray:
-                    return value.ByteArray;
-                case ValueType.DateTime:
-                    return new DateTime(1970, 1, 1).AddMilliseconds(value.DateTime);
-                case ValueType.Array:
-                    return value.ArrayProperties;
-                case ValueType.Obj:
-                    return value.ObjectProperties;
+            switch (value.ValueType) {
+                case ValueType.String:    return value.String;
+                case ValueType.Int:       return value.Int;
+                case ValueType.UInt:      return value.UInt;
+                case ValueType.Long:      return value.Long;
+                case ValueType.Bool:      return value.Bool;
+                case ValueType.Float:     return value.Float;
+                case ValueType.Double:    return value.Double;
+                case ValueType.ByteArray: return value.ByteArray;
+                case ValueType.DateTime:  return new DateTime(1970, 1, 1).AddMilliseconds(value.DateTime);
+                case ValueType.Array:     return value.ArrayProperties;
+                case ValueType.Obj:       return value.ObjectProperties;
+
                 default: return null;
             }
         }
