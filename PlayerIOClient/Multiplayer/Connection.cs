@@ -30,6 +30,9 @@ namespace PlayerIOClient
         /// </summary>
         /// <param name="message"> The reason of disconnecting explained by words. </param>
         public event DisconnectEventHandler OnDisconnect;
+        
+        /// <summary> Represents whether the connection is currently connected to a remote host. </summary>
+        public bool Connected => Socket.Connected;
 
         internal Connection(IPEndPoint endpoint, string joinKey)
         {
