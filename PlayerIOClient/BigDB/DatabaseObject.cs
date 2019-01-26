@@ -164,7 +164,7 @@ namespace PlayerIOClient
                 case ValueType.ByteArray: return value.ByteArray;
                 case ValueType.DateTime:  return new DateTime(1970, 1, 1).AddMilliseconds(value.DateTime);
                 case ValueType.Array:     return value.ArrayProperties;
-                case ValueType.Obj:       return value.ObjectProperties;
+                case ValueType.Object:    return value.ObjectProperties;
 
                 default: return null;
             }

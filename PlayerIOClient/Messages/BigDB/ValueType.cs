@@ -12,6 +12,6 @@
         ByteArray,
         DateTime,
         Array,
-        Obj
+        Object
     }
 }
