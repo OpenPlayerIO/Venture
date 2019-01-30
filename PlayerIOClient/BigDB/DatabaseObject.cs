@@ -21,6 +21,7 @@ namespace PlayerIOClient
             this.Key = key;
             this.Version = version;
             this.Properties = (DatabaseEx.FromDictionary(DatabaseEx.ToDictionary(properties)) as DatabaseObject).Properties;
+            this.ExistsInDatabase = true;
         }
 
         /// <summary>
@@ -28,8 +29,8 @@ namespace PlayerIOClient
         /// </summary>
         /// <param name="input"> The TSON string. </param>
         /// <returns> A database object containing the properties of the deserialized TSON. </returns>
-        public static DatabaseObject LoadFromString(string input)
-            => DatabaseEx.FromDictionary(TsonConvert.DeserializeObject(input)) as DatabaseObject;
+        public static DatabaseObject LoadFromString(string input) =>
+            DatabaseEx.FromDictionary(TsonConvert.DeserializeObject(input)) as DatabaseObject;
 
         public DatabaseObject()
         {
@@ -55,6 +56,11 @@ namespace PlayerIOClient
         /// The properties of the object.
         /// </summary>
         public Dictionary<string, object> Properties { get; set; }
+
+        /// <summary>
+        /// A boolean representing whether the Database Object has been persisted to BigDB.
+        /// </summary>
+        internal bool ExistsInDatabase { get; set; }
 
         public ICollection<object> Values => this.Properties.Values;
         public ICollection<string> Keys => this.Properties.Keys;
