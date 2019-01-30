@@ -8,8 +8,13 @@ namespace PlayerIOClient
 {
     public class DatabaseArray : DatabaseObject, IEnumerable<object>
     {
-        internal DatabaseArray(BigDB owner, string table, string key, string version, List<ObjectProperty> properties) : base(owner, table, key, version, properties) { }
-        public DatabaseArray() : base(null, string.Empty, string.Empty, string.Empty, new List<ObjectProperty>()) { }
+        internal DatabaseArray(BigDB owner, string table, string key, string version, List<ObjectProperty> properties) : base(owner, table, key, version, properties)
+        {
+        }
+
+        public DatabaseArray() : base(null, string.Empty, string.Empty, string.Empty, new List<ObjectProperty>())
+        {
+        }
 
         public new object[] Values => Properties.Values.ToArray();
         public object this[uint index] => index < Values.Length - 1 ? Values[index] ?? null : throw new IndexOutOfRangeException(nameof(index));
