@@ -3,7 +3,7 @@
 namespace PlayerIOClient
 {
     [ProtoContract]
-    internal class ObjectProperty
+    public class ObjectProperty
     {
         [ProtoMember(1)]
         public string Name { get; set; }

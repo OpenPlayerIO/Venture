@@ -90,22 +90,7 @@ namespace PlayerIOClient
         /// </param>
         public static Client Connect(string gameId, string connectionId, string userId, string auth)
         {
-            var (success, response, error) = new PlayerIOChannel().Request<ConnectArgs, ConnectOutput>(10, new ConnectArgs()
-            {
-                GameId = gameId,
-                ConnectionId = connectionId,
-                UserId = userId,
-                Auth = auth
-            });
-
-            if (!success)
-                throw new PlayerIOError(error.ErrorCode, error.Message);
-
-            return new Client(new PlayerIOChannel() { Token = response.Token })
-            {
-                PlayerInsight = new PlayerInsight(response.PlayerInsightState),
-                ConnectUserId = response.UserId
-            };
+            return PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(("userId", userId), ("auth", auth)));
         }
 
         /// <summary> Calculate an auth hash for use in the Connect method. </summary>

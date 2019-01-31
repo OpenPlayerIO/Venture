@@ -1,10 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Tson.NET;
 
 namespace PlayerIOClient
 {
-    public class DatabaseObject
+    /// <summary>
+    /// A database object is an object stored in BigDB which has a unique key, and a set of properties.
+    /// <para>
+    ///     You can set and remove properties, and persist the changes to the database with the Save() method on the root object.
+    /// </para>
+    /// </summary>
+    public partial class DatabaseObject : IDictionary<string, object>
     {
         internal DatabaseObject(BigDB owner, string table, string key, string version, List<ObjectProperty> properties)
         {
@@ -12,56 +20,96 @@ namespace PlayerIOClient
             this.Table = table;
             this.Key = key;
             this.Version = version;
-            this.Properties = (Dictionary<string, object>)BigDBExtensions.ToDictionary(properties);
+            this.Properties = (DatabaseEx.FromDictionary(DatabaseEx.ToDictionary(properties)) as DatabaseObject).Properties;
+            this.ExistsInDatabase = true;
+        }
+
+        /// <summary>
+        /// This method allows you to load a Database Object (properties only) from a TSON string.
+        /// </summary>
+        /// <param name="input"> The TSON string. </param>
+        /// <returns> A database object containing the properties of the deserialized TSON. </returns>
+        public static DatabaseObject LoadFromString(string input) => DatabaseEx.FromDictionary(TsonConvert.DeserializeObject(input)) as DatabaseObject;
+
+        public DatabaseObject()
+        {
+            this.Properties = new Dictionary<string, object>();
         }
 
         /// <summary>
         /// The name of the table the object belongs to.
         /// </summary>
-        public string Table { get; }
+        public string Table { get; internal set; }
 
         /// <summary>
         /// The key of the object.
         /// </summary>
-        public string Key { get; set; }
+        public string Key { get; internal set; }
 
         /// <summary>
         /// The version of the object, incremented every save.
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; internal set; }
 
         /// <summary>
         /// The properties of the object.
         /// </summary>
         public Dictionary<string, object> Properties { get; set; }
 
-        public object this[string prop] => Properties.ContainsKey(prop) ? Properties[prop] : null;
-        public object this[string prop, Type type] => Get(prop, type);
+        /// <summary>
+        /// A boolean representing whether the Database Object has been persisted to BigDB.
+        /// </summary>
+        internal bool ExistsInDatabase { get; set; }
+
+        public ICollection<object> Values => this.Properties.Values;
+        public ICollection<string> Keys => this.Properties.Keys;
+
+        public object this[string prop] => this.Properties.ContainsKey(prop) ? this.Properties[prop] : null;
+        public object this[string prop, Type type] => this.Get(prop, type);
         private object Get(string prop, Type type)
         {
-            if (!Properties.ContainsKey(prop) || Properties[prop] == null)
+            if (!this.Properties.ContainsKey(prop) || this.Properties[prop] == null)
                 throw new PlayerIOError(ErrorCode.GeneralError, (GetType() == typeof(DatabaseArray) ? "The array does not have an entry at: " : "Property does not exist: ") + prop);
 
-            if (Properties[prop].GetType() != type)
+            if (this.Properties[prop].GetType() != type)
                 throw new PlayerIOError(ErrorCode.GeneralError, $"No property found with the type '{ type.Name }'.");
 
-            return Properties[prop];
+            return this.Properties[prop];
         }
 
-        public virtual DatabaseObject Set(string property, object value)
+        public DatabaseObject Set(string property, string value)         => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, int value)            => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, uint value)           => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, long value)           => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, ulong value)          => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, float value)          => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, double value)         => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, bool value)           => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, byte[] value)         => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, DateTime value)       => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, DatabaseObject value) => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, DatabaseArray value)  => this.SetProperty(property, (object)value);
+
+        public virtual DatabaseObject SetProperty(string property, object value)
         {
+            if (property.Contains("."))
+                throw new InvalidOperationException("You must not include periods within the property name.");
+
             var allowedTypes = new List<Type>()
             {
                 typeof(string), typeof(int),    typeof(uint),
                 typeof(long),   typeof(ulong),  typeof(float),
                 typeof(double), typeof(bool),   typeof(byte[]),
-                typeof(DatabaseObject), typeof(DatabaseArray)
+                typeof(DateTime), typeof(DatabaseObject), typeof(DatabaseArray)
             };
 
             if (value != null && !allowedTypes.Contains(value.GetType()))
                 throw new PlayerIOError(ErrorCode.GeneralError, $"The type '{ value.GetType().Name }' is not allowed.");
 
-            this.Properties.Add(property, value);
+            if (!this.Properties.ContainsKey(property))
+                this.Properties.Add(property, value);
+            else this.Properties[property] = value;
+
             return this;
         }
 
@@ -98,78 +146,89 @@ namespace PlayerIOClient
         public DatabaseArray GetArray(string prop) => (DatabaseArray)this[prop, typeof(DatabaseArray)];
         public DatabaseArray GetArray(string prop, DatabaseArray defaultValue) => this[prop] is DatabaseArray value ? value : defaultValue;
 
-        public override string ToString()
+        /// <summary>
+        /// Check whether this object contains the specified property.
+        /// </summary>
+        /// <param name="property"> The name of the property. </param>
+        /// <returns> If the object contains the property, returns true. </returns>
+        public bool ContainsKey(string property) => this.Properties.ContainsKey(property);
+
+        /// <summary>
+        /// Removes a property from this object.
+        /// </summary>
+        /// <param name="property"> The property to remove. </param>
+        /// <returns> If the property has been successfully removed, returns true.  </returns>
+        public bool Remove(string property) => this.Properties.Remove(property);
+
+        /// <summary>
+        /// Removes all properties on this object.
+        /// </summary>
+        public void Clear() => this.Properties.Clear();
+
+        /// <summary>
+        /// The amount of properties within this object.
+        /// </summary>
+        public int Count => this.Properties.Count;
+
+        /// <summary>
+        /// Return a TSON string of the current object.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() => TsonConvert.SerializeObject(this.Properties, Formatting.Indented);
+
+        /// <summary>
+        /// Persist the database object to the server, using optimistic locking if specified.
+        /// </summary>
+        /// <param name="useOptimisticLock"> If true, the save will only be completed if the database object has not changed in BigDB since this instance was loaded. </param>
+        public void Save(bool useOptimisticLock = false)
         {
-            return TsonConvert.SerializeObject(this.Properties, Formatting.Indented);
+            this.Save(useOptimisticLock, new Callback(() => { }), new Callback<PlayerIOError>((error) => { }));
         }
 
-        internal BigDB Owner { get; }
+        /// <summary>
+        /// Persist the database objec to the server, using optimistic locking if specified.
+        /// </summary>
+        /// <param name="useOptimisticLock"> If true, the save will only be completed if the database object has not changed in BigDB since this instance was loaded. </param>
+        /// <param name="successCallback"> A callback invoked if the database object was successfully persisted to BigDB. </param>
+        /// <param name="errorCallback"> A callback invoked if there was an issue persisting the database object to BigDB. </param>
+        public void Save(bool useOptimisticLock, Callback successCallback, Callback<PlayerIOError> errorCallback)
+        {
+            if (this.Owner == null)
+                throw new PlayerIOError(ErrorCode.GeneralError, "You can only save database objects which are root objects in BigDB.");
+
+            if (!this.ExistsInDatabase)
+                throw new PlayerIOError(ErrorCode.GeneralError, "You can only save database objects of which already exist in BigDB.");
+
+            this.Owner.SaveChanges(useOptimisticLock ? LockType.LockAll : LockType.NoLocks, new List<BigDBChangeSet>()
+            {
+                new BigDBChangeSet()
+                {
+                    Table = this.Table,
+                    Key = this.Key,
+                    FullOverwrite = true,
+                    OnlyIfVersion = useOptimisticLock ? this.Version : null,
+                    Changes = DatabaseEx.FromDatabaseObject(this)
+                }
+            }, false);
+        }
+
+        internal BigDB Owner { get; set; }
     }
 
-    internal static class BigDBExtensions
+    public partial class DatabaseObject
     {
-        internal static object ToDictionary(object input)
-        {
-            var dictionary = new Dictionary<string, object>();
+        private const string INVALID_OPEARTION = "The requested method is disabled, please use the public methods instead.";
 
-            switch (input)
-            {
-                case List<ObjectProperty> databaseObject:
-                    foreach (var property in databaseObject)
-                        dictionary.Add(property.Name, ToDictionary(property.Value));
-                    break;
+        [EditorBrowsable(EditorBrowsableState.Never)] public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex) => throw new InvalidOperationException(INVALID_OPEARTION);
+        [EditorBrowsable(EditorBrowsableState.Never)] public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => throw new InvalidOperationException(INVALID_OPEARTION);
+        [EditorBrowsable(EditorBrowsableState.Never)] public bool Contains(KeyValuePair<string, object> item) => throw new InvalidOperationException(INVALID_OPEARTION);
+        [EditorBrowsable(EditorBrowsableState.Never)] public bool Remove(KeyValuePair<string, object> item) => throw new InvalidOperationException(INVALID_OPEARTION);
+        [EditorBrowsable(EditorBrowsableState.Never)] public bool TryGetValue(string key, out object value) => throw new InvalidOperationException(INVALID_OPEARTION);
+        [EditorBrowsable(EditorBrowsableState.Never)] public void Add(KeyValuePair<string, object> item) => throw new InvalidOperationException(INVALID_OPEARTION);
+        [EditorBrowsable(EditorBrowsableState.Never)] public void Add(string key, object value) => throw new InvalidOperationException(INVALID_OPEARTION);
+        [EditorBrowsable(EditorBrowsableState.Never)] IEnumerator IEnumerable.GetEnumerator() => throw new InvalidOperationException(INVALID_OPEARTION);
+        [EditorBrowsable(EditorBrowsableState.Never)] public bool IsReadOnly => throw new InvalidOperationException(INVALID_OPEARTION);
 
-                case ValueObject valueObject:
-                    var value = Value(valueObject);
-
-                    if (value is List<ObjectProperty> object_properties)
-                    {
-                        foreach (var property in object_properties)
-                            dictionary.Add(property.Name, ToDictionary(property.Value));
-                    }
-                    else if (value is List<ArrayProperty> array_properties)
-                    {
-                        var array = new object[array_properties.Count];
-                        for (var i = 0; i < array_properties.Count; i++)
-                            array[i] = ToDictionary(array_properties[i].Value);
-
-                        return array;
-                    }
-                    else
-                    {
-                        return ToDictionary(value);
-                    }
-
-                    break;
-
-                case null: return null;
-                default:   return input;
-            }
-
-            return dictionary;
-        }
-
-        internal static object Value(this ArrayProperty property) => Value(property.Value);
-        internal static object Value(this ObjectProperty property) => Value(property.Value);
-        internal static object Value(ValueObject value)
-        {
-            switch (value.ValueType) {
-                case ValueType.String:    return value.String;
-                case ValueType.Int:       return value.Int;
-                case ValueType.UInt:      return value.UInt;
-                case ValueType.Long:      return value.Long;
-                case ValueType.Bool:      return value.Bool;
-                case ValueType.Float:     return value.Float;
-                case ValueType.Double:    return value.Double;
-                case ValueType.ByteArray: return value.ByteArray;
-                case ValueType.DateTime:  return new DateTime(1970, 1, 1).AddMilliseconds(value.DateTime);
-                case ValueType.Array:     return value.ArrayProperties;
-                case ValueType.Object:    return value.ObjectProperties;
-
-                default: return null;
-            }
-        }
-
-
+        object IDictionary<string, object>.this[string key] { get => this.Properties[key]; set => this.Properties[key] = value; }
     }
 }

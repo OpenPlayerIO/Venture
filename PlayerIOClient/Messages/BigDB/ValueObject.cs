@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PlayerIOClient
 {
     [ProtoContract]
-    internal class ValueObject
+    public class ValueObject
     {
         [ProtoMember(1)]
         public ValueType ValueType { get; set; }

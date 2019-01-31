@@ -1,31 +1,37 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
 namespace PlayerIOClient
 {
-    public class DatabaseArray : DatabaseObject
+    public class DatabaseArray : DatabaseObject, IEnumerable<object>
     {
-        internal DatabaseArray(BigDB owner, string table, string key, string version, List<ObjectProperty> properties) : base(owner, table, key, version, properties) { }
-        public DatabaseArray() : base(null, string.Empty, string.Empty, string.Empty, new List<ObjectProperty>()) { }
+        internal DatabaseArray(BigDB owner, string table, string key, string version, List<ObjectProperty> properties) : base(owner, table, key, version, properties)
+        {
+        }
 
-        public object[] Values => Properties.Values.ToArray();
+        public DatabaseArray() : base(null, string.Empty, string.Empty, string.Empty, new List<ObjectProperty>())
+        {
+        }
+
+        public new object[] Values => Properties.Values.ToArray();
         public object this[uint index] => index < Values.Length - 1 ? Values[index] ?? null : throw new IndexOutOfRangeException(nameof(index));
 
-        public void Set(uint index, object value) => Set(index.ToString(), value);
+        public void Set(uint index, object value) => SetProperty(index.ToString(), value);
         public void Add(object value) => Set((uint)this.Properties.Count, value);
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override DatabaseObject Set(string index, object value)
+        public override DatabaseObject SetProperty(string index, object value)
         {
             if (!int.TryParse(index, out int i))
                 throw new Exception("You must specify the index as an integer.");
 
-            for (int j = Properties.Count; j < i; j++)
-                base.Set(j.ToString(), null);
+            for (var j = this.Properties.Count; j < i; j++)
+                base.SetProperty(j.ToString(), null);
 
-            return base.Set(index, value);
+            return base.SetProperty(index, value);
         }
 
         public bool GetBool(uint index) => GetBool(index.ToString());
@@ -57,5 +63,8 @@ namespace PlayerIOClient
 
         public DatabaseArray GetArray(uint index) => GetArray(index.ToString());
         public DatabaseArray GetArray(uint index, DatabaseArray defaultValue) => GetArray(index.ToString(), defaultValue);
+
+        public new IEnumerator<object> GetEnumerator() => ((IEnumerable<object>)Values).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<object>)Values).GetEnumerator();
     }
 }

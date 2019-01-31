@@ -5,6 +5,7 @@ using System.Text;
 using System.Linq;
 using Flurl.Http;
 using ProtoBuf;
+using System;
 
 namespace PlayerIOClient
 {
@@ -17,8 +18,8 @@ namespace PlayerIOClient
             var channel = new FlurlClient("https://api.playerio.com/");
 
             var stream = new MemoryStream();
-            Serializer.Serialize(stream, args);
-
+                Serializer.Serialize(stream, args);
+            
             try
             {
                 var response = channel.AllowHttpStatus(HttpStatusCode.OK)
@@ -38,10 +39,14 @@ namespace PlayerIOClient
                     return (false, default(TResponse), new PlayerIOError(error.ErrorCode, error.Message));
                 }
             }
-            catch
+            catch (FlurlHttpException)
             {
                 return (false, default(TResponse), 
                     new PlayerIOError(ErrorCode.GeneralError, "An error occurred while communicating with the Player.IO web service: the request timed out."));
+            }
+            catch (Exception ex)
+            {
+                throw ex; // unknown exception is thrown.
             }
         }
 
