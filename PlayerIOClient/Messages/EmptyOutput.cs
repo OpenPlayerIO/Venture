@@ -3,7 +3,7 @@
 namespace PlayerIOClient
 {
     [ProtoContract]
-    public class Empty
+    public class EmptyOutput
     {
 
     }

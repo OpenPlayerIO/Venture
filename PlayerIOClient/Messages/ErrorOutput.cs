@@ -3,7 +3,7 @@
 namespace PlayerIOClient
 {
     [ProtoContract]
-    internal class Error
+    internal class ErrorOutput
     {
         [ProtoMember(1)]
         public ErrorCode ErrorCode { get; set; } = ErrorCode.InternalError;

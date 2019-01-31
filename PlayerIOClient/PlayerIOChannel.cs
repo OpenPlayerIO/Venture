@@ -33,7 +33,7 @@ namespace PlayerIOClient
                 }
                 else
                 {
-                    var error = Serializer.Deserialize<Error>(new MemoryStream(response.Skip(2).ToArray()));
+                    var error = Serializer.Deserialize<ErrorOutput>(new MemoryStream(response.Skip(2).ToArray()));
 
                     return (false, default(TResponse), new PlayerIOError(error.ErrorCode, error.Message));
                 }
