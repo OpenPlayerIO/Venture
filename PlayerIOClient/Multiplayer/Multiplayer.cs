@@ -114,7 +114,7 @@ namespace PlayerIOClient
                 {
                     var resolution = Dns.GetHostEntry(endpoint.Address).AddressList[0];
 
-                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey);
+                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey, joinData);
                 }
             }
 
@@ -161,7 +161,7 @@ namespace PlayerIOClient
                 {
                     var resolution = Dns.GetHostEntry(endpoint.Address).AddressList[0];
 
-                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey);
+                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey, joinData);
                 }
             }
 

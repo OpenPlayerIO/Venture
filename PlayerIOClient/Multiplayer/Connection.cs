@@ -34,7 +34,7 @@ namespace PlayerIOClient
         /// <summary> Represents whether the connection is currently connected to a remote host. </summary>
         public bool Connected => Socket.Connected;
 
-        internal Connection(IPEndPoint endpoint, string joinKey)
+        internal Connection(IPEndPoint endpoint, string joinKey, Dictionary<string, string> joinData)
         {
             this.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.Socket.Connect(endpoint.Address, endpoint.Port);
@@ -44,7 +44,19 @@ namespace PlayerIOClient
 
             this.Stream.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
             this.Socket.Send(new byte[] { 0 });
-            this.Send(new Message("join", joinKey));
+
+            var join = new Message("join", joinKey);
+
+            if (joinData != null)
+            {
+                foreach (var kvp in joinData)
+                {
+                    join.Add(kvp.Key);
+                    join.Add(kvp.Value);
+                }
+            }
+
+            this.Send(join);
 
             this.MessageDeserializer.OnDeserializedMessage += (message) =>
             {
