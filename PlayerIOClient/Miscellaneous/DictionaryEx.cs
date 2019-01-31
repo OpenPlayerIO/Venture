@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace PlayerIOClient
@@ -23,9 +22,5 @@ namespace PlayerIOClient
             => dictionary
             .Where(x => x.Value != null)
             .ToDictionary(x => x.Key, x => x.Value);
-
-
-        internal static DateTime FromUnixTime(this long input) => new DateTime(1970, 1, 1).AddMilliseconds((long)input);
-        internal static long ToUnixTime(this DateTime input) => (long)((input - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds);
     }
 }

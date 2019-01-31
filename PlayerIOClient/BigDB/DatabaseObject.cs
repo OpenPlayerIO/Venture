@@ -20,8 +20,11 @@ namespace PlayerIOClient
             this.Table = table;
             this.Key = key;
             this.Version = version;
-            this.Properties = (DatabaseEx.FromDictionary(DatabaseEx.ToDictionary(properties)) as DatabaseObject).Properties;
+            this.Properties = new Dictionary<string, object>();
             this.ExistsInDatabase = true;
+
+            if (properties != null)
+                this.Properties = (DatabaseEx.FromDictionary(DatabaseEx.ToDictionary(properties)) as DatabaseObject).Properties;
         }
 
         /// <summary>
@@ -64,17 +67,17 @@ namespace PlayerIOClient
         public ICollection<object> Values => this.Properties.Values;
         public ICollection<string> Keys => this.Properties.Keys;
 
-        public object this[string prop] => this.Properties.ContainsKey(prop) ? this.Properties[prop] : null;
-        public object this[string prop, Type type] => this.Get(prop, type);
-        private object Get(string prop, Type type)
+        public object this[string property] => this.Properties.ContainsKey(property) ? this.Properties[property] : null;
+        public object this[string property, Type type] => this.Get(property, type);
+        private object Get(string property, Type type)
         {
-            if (!this.Properties.ContainsKey(prop) || this.Properties[prop] == null)
-                throw new PlayerIOError(ErrorCode.GeneralError, (GetType() == typeof(DatabaseArray) ? "The array does not have an entry at: " : "Property does not exist: ") + prop);
+            if (!this.Properties.ContainsKey(property) || this.Properties[property] == null)
+                throw new PlayerIOError(ErrorCode.GeneralError, (GetType() == typeof(DatabaseArray) ? "The array does not have an entry at: " : "Property does not exist: ") + property);
 
-            if (this.Properties[prop].GetType() != type)
+            if (this.Properties[property].GetType() != type)
                 throw new PlayerIOError(ErrorCode.GeneralError, $"No property found with the type '{ type.Name }'.");
 
-            return this.Properties[prop];
+            return this.Properties[property];
         }
 
         public DatabaseObject Set(string property, string value)         => this.SetProperty(property, (object)value);

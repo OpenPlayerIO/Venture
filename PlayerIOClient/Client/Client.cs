@@ -33,6 +33,11 @@ namespace PlayerIOClient
         public BigDB BigDB { get; }
 
         /// <summary>
+        /// The property used to access the PayVault service.
+        /// </summary>
+        public PayVault PayVault { get; }
+
+        /// <summary>
         /// The property used to access the ErrorLog service.
         /// </summary>
         public ErrorLog ErrorLog { get; }
@@ -45,6 +50,7 @@ namespace PlayerIOClient
             this.Multiplayer = new Multiplayer(channel);
             this.BigDB = new BigDB(channel);
             this.ErrorLog = new ErrorLog(channel);
+            this.PayVault = new PayVault(channel, this.ConnectUserId);
         }
 
         private PlayerIOChannel Channel { get; }
