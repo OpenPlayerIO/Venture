@@ -12,6 +12,6 @@ namespace PlayerIOClient
         public string JoinKey { get; set; }
 
         [ProtoMember(3)]
-        public ServerEndpoint[] Endpoints { get; set; }
+        public ServerEndPoint[] Endpoints { get; set; }
     }
 }

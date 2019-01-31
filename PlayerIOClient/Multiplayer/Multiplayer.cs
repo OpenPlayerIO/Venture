@@ -5,6 +5,8 @@ using System.Net;
 
 namespace PlayerIOClient
 {
+    public delegate List<ServerEndPoint> GameServerEndpointFilterDelegate(List<ServerEndPoint> endpoints);
+
     /// <summary>
     /// The Player.IO Multiplayer service.
     /// </summary>
@@ -19,6 +21,12 @@ namespace PlayerIOClient
         /// If true, the multiplayer connections will be encrypted using TLS/SSL. Beaware that this will cause a performance degredation by introducting secure connection negotiation latency.
         /// </summary>
         public bool UseSecureConnections { get; set; } // TODO: Implement this.
+
+        /// <summary>
+        /// If not null, allows you to filter, rearrange, or completely redefine the game server endpoints. The endpoints are tried consecutively until there is one successful connection to a game server.
+        /// If the <see cref="DevelopmentServer"/> property is set, this property is ignored.
+        /// </summary>
+        public GameServerEndpointFilterDelegate GameServerEndPointFilter { get; set; }
 
         internal Multiplayer(PlayerIOChannel channel)
         {
@@ -98,7 +106,7 @@ namespace PlayerIOClient
             if (!success)
                 throw new PlayerIOError(error.ErrorCode, error.Message);
 
-            var endpoints = response.Endpoints.ToList();
+            var endpoints = this.FilterGameEndPoints(response.Endpoints.ToList());
 
             foreach (var endpoint in endpoints)
             {
@@ -145,26 +153,45 @@ namespace PlayerIOClient
             if (!success)
                 throw new PlayerIOError(error.ErrorCode, error.Message);
 
-            if (this.DevelopmentServer != null)
-            {
-                return new Connection(new IPEndPoint(Dns.GetHostEntry(this.DevelopmentServer.Address).AddressList[0], this.DevelopmentServer.Port), response.JoinKey);
-            }
-            else
-            {
-                var endpoints = response.Endpoints.ToList();
+            var endpoints = this.FilterGameEndPoints(response.Endpoints.ToList());
 
-                foreach (var endpoint in endpoints)
+            foreach (var endpoint in endpoints)
+            {
+                if (PortCheck.IsPortOpen(endpoint.Address, endpoint.Port, 1000, 3))
                 {
-                    if (PortCheck.IsPortOpen(endpoint.Address, endpoint.Port, 1000, 3))
-                    {
-                        var resolution = Dns.GetHostEntry(endpoint.Address).AddressList[0];
+                    var resolution = Dns.GetHostEntry(endpoint.Address).AddressList[0];
 
-                        return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey);
-                    }
+                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey);
                 }
             }
 
             throw new PlayerIOError(ErrorCode.GeneralError, "[Venture] Unable to join room - unable to establish connection from any endpoint(s) returned by API.");
+        }
+
+        private List<ServerEndPoint> FilterGameEndPoints(List<ServerEndPoint> endpoints)
+        {
+            if (endpoints == null)
+            {
+                endpoints = new List<ServerEndPoint>(); 
+            }
+
+            if (this.DevelopmentServer != null)
+            {
+                endpoints.Clear();
+                endpoints.Add(new ServerEndPoint(DevelopmentServer.Address, DevelopmentServer.Port));
+
+                return endpoints;
+            }
+
+            if (this.GameServerEndPointFilter != null)
+            {
+                endpoints.Clear();
+                endpoints.AddRange(this.GameServerEndPointFilter(endpoints));
+
+                return endpoints;
+            }
+
+            return endpoints;
         }
 
         private PlayerIOChannel Channel { get; }

@@ -8,6 +8,7 @@ namespace PlayerIOClient
         public static bool IsPortOpen(string host, int port, int timeout, int retry)
         {
             var retryCount = 0;
+
             while (retryCount < retry)
             {
                 if (retryCount > 0)
