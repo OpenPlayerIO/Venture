@@ -29,8 +29,7 @@ namespace PlayerIOClient
         /// </summary>
         /// <param name="input"> The TSON string. </param>
         /// <returns> A database object containing the properties of the deserialized TSON. </returns>
-        public static DatabaseObject LoadFromString(string input) =>
-            DatabaseEx.FromDictionary(TsonConvert.DeserializeObject(input)) as DatabaseObject;
+        public static DatabaseObject LoadFromString(string input) => DatabaseEx.FromDictionary(TsonConvert.DeserializeObject(input)) as DatabaseObject;
 
         public DatabaseObject()
         {
@@ -65,20 +64,33 @@ namespace PlayerIOClient
         public ICollection<object> Values => this.Properties.Values;
         public ICollection<string> Keys => this.Properties.Keys;
 
-        public object this[string prop] => Properties.ContainsKey(prop) ? Properties[prop] : null;
-        public object this[string prop, Type type] => Get(prop, type);
+        public object this[string prop] => this.Properties.ContainsKey(prop) ? this.Properties[prop] : null;
+        public object this[string prop, Type type] => this.Get(prop, type);
         private object Get(string prop, Type type)
         {
-            if (!Properties.ContainsKey(prop) || Properties[prop] == null)
+            if (!this.Properties.ContainsKey(prop) || this.Properties[prop] == null)
                 throw new PlayerIOError(ErrorCode.GeneralError, (GetType() == typeof(DatabaseArray) ? "The array does not have an entry at: " : "Property does not exist: ") + prop);
 
-            if (Properties[prop].GetType() != type)
+            if (this.Properties[prop].GetType() != type)
                 throw new PlayerIOError(ErrorCode.GeneralError, $"No property found with the type '{ type.Name }'.");
 
-            return Properties[prop];
+            return this.Properties[prop];
         }
 
-        public virtual DatabaseObject Set(string property, object value)
+        public DatabaseObject Set(string property, string value)         => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, int value)            => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, uint value)           => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, long value)           => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, ulong value)          => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, float value)          => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, double value)         => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, bool value)           => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, byte[] value)         => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, DateTime value)       => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, DatabaseObject value) => this.SetProperty(property, (object)value);
+        public DatabaseObject Set(string property, DatabaseArray value)  => this.SetProperty(property, (object)value);
+
+        public virtual DatabaseObject SetProperty(string property, object value)
         {
             if (property.Contains("."))
                 throw new InvalidOperationException("You must not include periods within the property name.");
@@ -94,7 +106,10 @@ namespace PlayerIOClient
             if (value != null && !allowedTypes.Contains(value.GetType()))
                 throw new PlayerIOError(ErrorCode.GeneralError, $"The type '{ value.GetType().Name }' is not allowed.");
 
-            this.Properties.Add(property, value);
+            if (!this.Properties.ContainsKey(property))
+                this.Properties.Add(property, value);
+            else this.Properties[property] = value;
+
             return this;
         }
 
@@ -160,6 +175,42 @@ namespace PlayerIOClient
         /// </summary>
         /// <returns></returns>
         public override string ToString() => TsonConvert.SerializeObject(this.Properties, Formatting.Indented);
+
+        /// <summary>
+        /// Persist the database object to the server, using optimistic locking if specified.
+        /// </summary>
+        /// <param name="useOptimisticLock"> If true, the save will only be completed if the database object has not changed in BigDB since this instance was loaded. </param>
+        public void Save(bool useOptimisticLock = false)
+        {
+            this.Save(useOptimisticLock, new Callback(() => { }), new Callback<PlayerIOError>((error) => { }));
+        }
+
+        /// <summary>
+        /// Persist the database objec to the server, using optimistic locking if specified.
+        /// </summary>
+        /// <param name="useOptimisticLock"> If true, the save will only be completed if the database object has not changed in BigDB since this instance was loaded. </param>
+        /// <param name="successCallback"> A callback invoked if the database object was successfully persisted to BigDB. </param>
+        /// <param name="errorCallback"> A callback invoked if there was an issue persisting the database object to BigDB. </param>
+        public void Save(bool useOptimisticLock, Callback successCallback, Callback<PlayerIOError> errorCallback)
+        {
+            if (this.Owner == null)
+                throw new PlayerIOError(ErrorCode.GeneralError, "You can only save database objects which are root objects in BigDB.");
+
+            if (!this.ExistsInDatabase)
+                throw new PlayerIOError(ErrorCode.GeneralError, "You can only save database objects of which already exist in BigDB.");
+
+            this.Owner.SaveChanges(useOptimisticLock ? LockType.LockAll : LockType.NoLocks, new List<BigDBChangeSet>()
+            {
+                new BigDBChangeSet()
+                {
+                    Table = this.Table,
+                    Key = this.Key,
+                    FullOverwrite = true,
+                    OnlyIfVersion = useOptimisticLock ? this.Version : null,
+                    Changes = DatabaseEx.FromDatabaseObject(this)
+                }
+            }, false);
+        }
 
         internal BigDB Owner { get; set; }
     }

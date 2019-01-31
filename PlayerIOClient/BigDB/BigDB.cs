@@ -13,7 +13,7 @@ namespace PlayerIOClient
     /// You can set up tables in your admin panel, and you can also set up indexes there for when you want to load objects by properties
     /// </para>
     /// </summary>
-    public class BigDB
+    public partial class BigDB
     {
         internal BigDB(PlayerIOChannel channel)
         {
@@ -148,6 +148,20 @@ namespace PlayerIOClient
                 throw new PlayerIOError(error.ErrorCode, error.Message);
         }
 
+        internal List<string> SaveChanges(LockType lockType, List<BigDBChangeSet> changeSets, bool createIfMissing)
+        {
+            var (success, response, error) = this.Channel.Request<SaveObjectChangesArgs, SaveObjectChangesOutput>(88, new SaveObjectChangesArgs()
+            {
+                LockType = lockType,
+                ChangeSets = changeSets,
+                CreateIfMissing = createIfMissing
+            });
+
+            if (!success)
+                throw new PlayerIOError(error.ErrorCode, error.Message);
+
+            return response.Versions;
+        }
 
         internal PlayerIOChannel Channel { get; }
     }

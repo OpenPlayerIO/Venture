@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace PlayerIOClient
 {
@@ -105,7 +104,7 @@ namespace PlayerIOClient
                 {
                     if (kvp.Value is Dictionary<string, object>)
                     {
-                        model.Set(kvp.Key, FromDictionary(kvp.Value as Dictionary<string, object>));
+                        model.SetProperty(kvp.Key, FromDictionary(kvp.Value as Dictionary<string, object>));
                     }
                     else if (kvp.Value is object[])
                     {
@@ -116,11 +115,11 @@ namespace PlayerIOClient
                             array.Add(FromDictionary(value));
                         }
 
-                        model.Set(kvp.Key, array);
+                        model.SetProperty(kvp.Key, array);
                     }
                     else
                     {
-                        model.Set(kvp.Key, kvp.Value);
+                        model.SetProperty(kvp.Key, kvp.Value);
                     }
                 }
 

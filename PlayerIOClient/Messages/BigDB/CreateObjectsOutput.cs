@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Collections.Generic;
+using ProtoBuf;
 
 namespace PlayerIOClient
 {
@@ -6,6 +7,6 @@ namespace PlayerIOClient
     internal class CreateObjectsOutput
     {
         [ProtoMember(1)]
-        public DatabaseObject[] Objects { get; set; }
+        public List<BigDBObject> Objects { get; set; }
     }
 }
