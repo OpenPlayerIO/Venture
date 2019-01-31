@@ -9,7 +9,7 @@ namespace PlayerIOClient
     {
         internal static (byte[] publicKey, string nonce) SimpleUserGetSecureLoginInfo()
         {
-            var (success, response, error) = new PlayerIOChannel().Request<Empty, SimpleUserGetSecureLoginInfoOutput>(424, new Empty());
+            var (success, response, error) = new PlayerIOChannel().Request<EmptyOutput, SimpleUserGetSecureLoginInfoOutput>(424, new EmptyOutput());
 
             if (!success)
                 throw new PlayerIOError(error.ErrorCode, error.Message);

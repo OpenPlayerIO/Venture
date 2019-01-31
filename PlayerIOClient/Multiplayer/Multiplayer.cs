@@ -18,7 +18,7 @@ namespace PlayerIOClient
         /// <summary>
         /// If true, the multiplayer connections will be encrypted using TLS/SSL. Beaware that this will cause a performance degredation by introducting secure connection negotiation latency.
         /// </summary>
-        public bool UseSecureConnections { get; set; }
+        public bool UseSecureConnections { get; set; } // TODO: Implement this.
 
         internal Multiplayer(PlayerIOChannel channel)
         {

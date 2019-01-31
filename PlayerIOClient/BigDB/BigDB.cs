@@ -119,7 +119,21 @@ namespace PlayerIOClient
             }
         }
 
-        /// <summary> Creates a new database object in the given table with the specified key. 
+        /// <summary>
+        /// Load the database object corresponding to the ConnectUserId of the client from the PlayerObjects table.
+        /// </summary>
+        /// <returns> The database object for the client. </returns>
+        public DatabaseObject LoadMyPlayerObject()
+        {
+            var (success, response, error) = this.Channel.Request<LoadMyPlayerObjectArgs, LoadMyPlayerObjectOutput>(103, new LoadMyPlayerObjectArgs());
+
+            if (!success)
+                throw new PlayerIOError(ErrorCode.GeneralError, error.Message);
+
+            return new DatabaseObject(this, "PlayerObjects", response.PlayerObject.Key, response.PlayerObject.Version, response.PlayerObject.Properties);
+        }
+
+        /// <summary> Create a new database object in the given table with the specified key. 
         /// If no key is specified (null), the Database Object will receive an automatically generated key. 
         /// </summary>
         /// <param name="table"> The name of the table in which to create the database object. </param>
@@ -128,12 +142,35 @@ namespace PlayerIOClient
         /// <returns> A new instance of the DatabaseObject from which .Save() can be called for future modifications. </returns>
         public void CreateObject(string table, string key, DatabaseObject dbo)
         {
-            this.CreateObjects(new[] { new DatabaseObjectPushModel
+            this.CreateObjects(new[]
             {
-                Table = table,
-                Key = key,
-                Properties = DatabaseEx.FromDatabaseObject(dbo)
-            } }, false);
+                new DatabaseObjectPushModel()
+                {
+                    Table = table,
+                    Key = key,
+                    Properties = DatabaseEx.FromDatabaseObject(dbo)
+                }
+            }, false);
+        }
+
+        /// <summary>
+        /// Delete the database objects with the given keys from the specified table.
+        /// </summary>
+        /// <param name="table"> The name of the table. </param>
+        /// <param name="keys"> The database object keys. </param>
+        public void DeleteObjects(string table, params string[] keys)
+        {
+            var (success, response, error) = this.Channel.Request<DeleteObjectsArgs, DeleteObjectsOutput>(91, new DeleteObjectsArgs()
+            {
+                ObjectIds = new List<BigDBObjectId>()
+                {
+                    new BigDBObjectId()
+                    {
+                        Table = table,
+                        Keys = keys.ToList()
+                    }
+                }
+            });
         }
 
         internal void CreateObjects(DatabaseObjectPushModel[] objects, bool loadExisting)

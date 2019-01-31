@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using System.Collections.Generic;
 using System.Security.Cryptography;
+using System.Linq;
 using System.Text;
 
 namespace PlayerIOClient
@@ -74,7 +74,7 @@ namespace PlayerIOClient
             };
         }
 
-        /// <summary> Connects to a game based on Player.IO as the given user. </summary>
+        /// <summary> Connects to a game based on Player.IO as the given user using basic authentiation. </summary>
         /// <param name="gameId">
         /// The ID of the game you wish to connect to. This value can be found in the admin panel.
         /// </param>
@@ -86,20 +86,19 @@ namespace PlayerIOClient
         /// <param name="auth">
         /// If the connection identified by ConnectionIdentifier only accepts authenticated requests:
         /// The auth value generated based on 'userId'. You can generate an auth value using the
-        /// CalcAuth() method.
+        /// CalcAuth256() method.
         /// </param>
-        public static Client Connect(string gameId, string connectionId, string userId, string auth)
-        {
-            return PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(("userId", userId), ("auth", auth)));
-        }
+        public static Client Connect(string gameId, string connectionId, string userId, string auth) =>
+            PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(("userId", userId), ("auth", auth)));
 
-        /// <summary> Calculate an auth hash for use in the Connect method. </summary>
+        /// <summary> Calculate an auth hash for use in basic authenticcation. </summary>
         /// <param name="userId"> The UserID to use when generating the hash. </param>
         /// <param name="sharedSecret">
         /// The shared secret to use when generating the hash. This must be the same value as the one
         /// given to a connection in the admin panel.
         /// </param>
         /// <returns> The generated auth hash (based on SHA-1) </returns>
+        [Obsolete("Player.IO now uses SHA-256 by default. If your connection type uses SHA-256 use the CalcAuth256() method instead.", false)]
         public static string CalcAuth(string userId, string sharedSecret)
         {
             var unixTime = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
@@ -113,7 +112,7 @@ namespace PlayerIOClient
             }
         }
 
-        /// <summary> Calculate an auth hash for use in the Connect method. </summary>
+        /// <summary> Calculate an auth hash for use in basic authentication. </summary>
         /// <param name="userId"> The UserID to use when generating the hash. </param>
         /// <param name="sharedSecret"> The shared secret to use when generating the hash. This must be the same value as the one
         /// given to a connection in the admin panel. </param>
