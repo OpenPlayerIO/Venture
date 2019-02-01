@@ -7,10 +7,43 @@ namespace PlayerIOClient
 {
     public delegate List<ServerEndPoint> GameServerEndpointFilterDelegate(List<ServerEndPoint> endpoints);
 
+    public partial class Multiplayer
+    {
+        /// <summary> Join a running multiplayer room. </summary>
+        /// <param name="roomId"> The ID of the room you wish to join. </param>
+        /// <param name="joinData"> Data to send to the room with additional information about the join. </param>
+        /// <param name="successCallback"> A callback called when you successfully created and joined the room. </param>
+        /// <param name="errorCallback"> A callback called instead of <paramref name="successCallback"/> if an error occurs when joining the room. </param>
+        public void JoinRoom(string roomId, Dictionary<string, string> joinData = null, Callback<Connection> successCallback = null, Callback<PlayerIOError> errorCallback = null)
+            => CallbackHandler.CreateHandler(() => this.JoinRoom(roomId, joinData), ref successCallback, ref errorCallback);
+
+        /// <summary> Creates a multiplayer room (if it doesn't exists already), and joins it. </summary>
+        /// <param name="roomId"> The ID of the room you wish to (create and then) join. </param>
+        /// <param name="roomType">
+        /// If the room doesn't exists: The name of the room type you wish to run the room as. This
+        /// value should match one of the 'RoomType(...)' attributes of your uploaded code. A room
+        /// type of 'bounce' is always available.
+        /// </param>
+        /// <param name="visible">
+        /// If the room doesn't exists: Determines (upon creation) if the room should be visible when
+        /// listing rooms with ListRooms.
+        /// </param>
+        /// <param name="roomData">
+        /// If the room doesn't exists: The data to initialize the room with (upon creation).
+        /// </param>
+        /// <param name="joinData">
+        /// Data to send to the room with additional information about the join.
+        /// </param>
+        /// <param name="successCallback"> A callback called when you successfully created and/or joined the room. </param>
+        /// <param name="errorCallback"> A callback called instead of <paramref name="successCallback"/> if an error occurs when creating or joining the room. </param>
+        public void CreateJoinRoom(string roomId, string roomType, bool visible = true, Dictionary<string, string> roomData = null, Dictionary<string, string> joinData = null, Callback<Connection> successCallback = null, Callback<PlayerIOError> errorCallback = null)
+            => CallbackHandler.CreateHandler(() => this.CreateJoinRoom(roomId, roomType, visible, roomData, joinData), ref successCallback, ref errorCallback);
+    }
+
     /// <summary>
     /// The Player.IO Multiplayer service.
     /// </summary>
-    public class Multiplayer
+    public partial class Multiplayer
     {
         /// <summary>
         /// If set, rooms will be created on the development server at the address defined by the endpoint specified, instead of using the live Player.IO servers.
@@ -92,8 +125,6 @@ namespace PlayerIOClient
         /// <summary> Join a running multiplayer room. </summary>
         /// <param name="roomId"> The ID of the room you wish to join. </param>
         /// <param name="joinData"> Data to send to the room with additional information about the join. </param>
-        /// <param name="successCallback"> A callback called when you successfully created and joined the room. </param>
-        /// <param name="errorCallback"> A callback called instead of <paramref name="successCallback"/> if an error occurs when joining the room. </param>
         public Connection JoinRoom(string roomId, Dictionary<string, string> joinData = null)
         {
             var (success, response, error) = this.Channel.Request<JoinRoomArgs, JoinRoomOutput>(24, new JoinRoomArgs
