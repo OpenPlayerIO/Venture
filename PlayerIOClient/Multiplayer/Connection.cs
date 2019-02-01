@@ -32,7 +32,7 @@ namespace PlayerIOClient
         public event DisconnectEventHandler OnDisconnect;
         
         /// <summary> Represents whether the connection is currently connected to a remote host. </summary>
-        public bool Connected => Socket.Connected;
+        public bool Connected => this.Socket.Connected;
 
         internal Connection(IPEndPoint endpoint, string joinKey, Dictionary<string, string> joinData)
         {
@@ -45,6 +45,11 @@ namespace PlayerIOClient
             this.Stream.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
             this.Socket.Send(new byte[] { 0 });
 
+            PlayerIOKeepAlive.SetKeepAlive(this.Socket); // Player.IO uses these keep alive values in their client.
+
+            this.Socket.NoDelay = true; // Player.IO enables the Nagle algorithm in their client.
+            this.Socket.Blocking = true; // Player.IO enables the blocking mode in their client.
+            
             var join = new Message("join", joinKey);
 
             if (joinData != null)
