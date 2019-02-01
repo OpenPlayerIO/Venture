@@ -3,7 +3,7 @@
 namespace PlayerIOClient
 {
     [ProtoContract]
-    internal class PayVaultRefreshOutput
+    internal class PayVaultBuyOutput
     {
         [ProtoMember(1)]
         public PayVaultContents PayVaultContents { get; set; }

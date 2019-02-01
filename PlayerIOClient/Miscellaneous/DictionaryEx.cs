@@ -10,7 +10,7 @@ namespace PlayerIOClient
             .Select(x => new KeyValuePair { Key = x.Key, Value = x.Value })
             .ToArray();
 
-        internal static Dictionary<string, string> Convert(KeyValuePair[] keyValuePair)
+        internal static Dictionary<string, string> Convert(IEnumerable<KeyValuePair> keyValuePair)
             => (keyValuePair ?? new KeyValuePair[0]).ToDictionary(x => x.Key, x => x.Value);
 
         internal static Dictionary<string, string> Create(params (string Key, string Value)[] pairs)

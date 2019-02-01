@@ -3,12 +3,15 @@
 namespace PlayerIOClient
 {
     [ProtoContract]
-    internal class PayVaultRefreshArgs
+    internal class PayVaultCreditArgs
     {
         [ProtoMember(1)]
-        public string LastVersion { get; set; }
+        public uint Amount { get; set; }
 
         [ProtoMember(2)]
+        public string Reason { get; set; }
+
+        [ProtoMember(3)]
         public string ConnectUserId { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.ComponentModel;
 
 namespace PlayerIOClient
 {
@@ -40,11 +40,11 @@ namespace PlayerIOClient
             });
         }
 
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new string Key { get; set; }
 
-        public override DatabaseObject SetProperty(string property, object value)
-        {
-            throw new Exception();
-        }
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override DatabaseObject SetProperty(string property, object value) => 
+            throw new InvalidOperationException("You cannot set properties on a Vault Item.");
     }
 }
