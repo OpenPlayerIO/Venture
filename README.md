@@ -6,7 +6,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/0f4k6vj6aoa2r8k0?svg=true)](https://ci.appveyor.com/project/atillabyte/venture)
 [![Nuget](https://img.shields.io/nuget/v/Venture.svg)](https://www.nuget.org/packages/Venture/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FOpenPlayerIO%2FVenture.svg?type=small)](https://app.fossa.io/projects/git%2Bgithub.com%2FOpenPlayerIO%2FVenture?ref=badge_small)
 
 ## Getting Started
