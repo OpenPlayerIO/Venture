@@ -5,6 +5,8 @@
 <h2 align="center">An open-source alternative to PlayerIOClient for .NET Core.</h2>
 
 ## Getting Started
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FOpenPlayerIO%2FVenture.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FOpenPlayerIO%2FVenture?ref=badge_shield)
+
 The usage of this library is slightly different than the client [Player.IO](https://playerio.com) offers,
 although the functionality is essentially the same with several additional benefits and features which will be further detailed below.
 
@@ -77,3 +79,7 @@ client.BigDB.LoadMyPlayerObject()
 }
 ```
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FOpenPlayerIO%2FVenture.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FOpenPlayerIO%2FVenture?ref=badge_large)
