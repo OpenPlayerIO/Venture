@@ -1,5 +1,8 @@
-# Venture
-An open-source alternative to PlayerIOClient primarily for .NET Core.
+<p align="center">
+  <img alt="venture-logo" src="https://rawcdn.githack.com/OpenPlayerIO/Venture/3d088da9f6ec372aa64cb8f49053efd1dcea9825/VentureLogoDynamic.svg" width="480">
+  <br>
+</p>
+<h2 align="center">An open-source alternative to PlayerIOClient for .NET Core.</h2>
 
 ## Getting Started
 The usage of this library is slightly different than the client [Player.IO](https://playerio.com) offers,
