@@ -189,6 +189,11 @@ namespace PlayerIOClient
         }
 
         /// <summary>
+        /// Persist the database object to the server using optimistic locking. If the object does not exist, it will be created.
+        /// </summary>
+        public void Save(Callback successCallback = null, Callback<PlayerIOError> errorCallback = null) => this.Save(true, true, successCallback, errorCallback);
+
+        /// <summary>
         /// Persist the database objec to the server, using optimistic locking if specified.
         /// </summary>
         /// <param name="useOptimisticLock"> If true, the save will only be completed if the database object has not changed in BigDB since this instance was loaded. </param>
@@ -202,17 +207,26 @@ namespace PlayerIOClient
             if (!this.ExistsInDatabase)
                 throw new PlayerIOError(ErrorCode.GeneralError, "You can only save database objects of which already exist in BigDB.");
 
-            this.Owner.SaveChanges(useOptimisticLock ? LockType.LockAll : LockType.NoLocks, new List<BigDBChangeSet>()
+            try
             {
-                new BigDBChangeSet()
+                this.Owner.SaveChanges(useOptimisticLock ? LockType.LockAll : LockType.NoLocks, new List<BigDBChangeSet>()
                 {
-                    Table = this.Table,
-                    Key = this.Key,
-                    FullOverwrite = true,
-                    OnlyIfVersion = useOptimisticLock ? this.Version : null,
-                    Changes = DatabaseEx.FromDatabaseObject(this)
-                }
-            }, createIfMissing);
+                    new BigDBChangeSet()
+                    {
+                        Table = this.Table,
+                        Key = this.Key,
+                        FullOverwrite = true,
+                        OnlyIfVersion = useOptimisticLock ? this.Version : null,
+                        Changes = DatabaseEx.FromDatabaseObject(this)
+                    }
+                }, createIfMissing);
+
+                successCallback();
+            }
+            catch (PlayerIOError error)
+            {
+                errorCallback(error);
+            }
         }
 
         internal BigDB Owner { get; set; }
