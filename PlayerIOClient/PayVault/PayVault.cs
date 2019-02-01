@@ -8,7 +8,7 @@ namespace PlayerIOClient
         private string CurrentVersion { get; set; }
         private string ConnectUserId { get; }
         private long InternalCoins { get; set; }
-        private VaultItem[] InternalItems { get; set; }
+        private VaultItem[] InternalItems { get; set; } = new VaultItem[] { };
 
         private void ReadContent(PayVaultContents contents)
         {
@@ -16,7 +16,9 @@ namespace PlayerIOClient
             {
                 this.CurrentVersion = contents.Version;
                 this.InternalCoins = (long)contents.Coins;
-                this.InternalItems = contents.Items.Select(i => new VaultItem(i.Id, i.ItemKey, i.PurchaseDate.FromUnixTime(), i.Properties)).ToArray();
+
+                if (contents.Items != null)
+                    this.InternalItems = contents.Items.Select(i => new VaultItem(i.Id, i.ItemKey, i.PurchaseDate.FromUnixTime(), i.Properties)).ToArray();
             }
         }
 

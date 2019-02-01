@@ -34,9 +34,16 @@ namespace PlayerIOClient
                 }
                 else
                 {
-                    var error = Serializer.Deserialize<ErrorOutput>(new MemoryStream(response.Skip(2).ToArray()));
-
-                    return (false, default(TResponse), new PlayerIOError(error.ErrorCode, error.Message));
+                    if (method != 403)
+                    {
+                        var error = Serializer.Deserialize<ErrorOutput>(new MemoryStream(response.Skip(2).ToArray()));
+                        return (false, default(TResponse), new PlayerIOError(error.ErrorCode, error.Message));
+                    }
+                    else
+                    {
+                        var error = Serializer.Deserialize<PlayerIORegistrationErrorOutput>(new MemoryStream(response.Skip(2).ToArray()));
+                        return (false, default(TResponse), new PlayerIORegistrationError((ErrorCode)error.ErrorCode, error.Message, error.UsernameError, error.PasswordError, error.EmailError, error.CaptchaError));
+                    }
                 }
             }
             catch (FlurlHttpException)

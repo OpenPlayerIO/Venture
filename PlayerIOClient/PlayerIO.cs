@@ -12,7 +12,7 @@ namespace PlayerIOClient
     /// </summary>
     public static class PlayerIO
     {
-        private static string LibraryVersion => "1.4.1"; // Venture version (major.minor.patch)
+        private static string LibraryVersion => "1.4.2"; // Venture version (major.minor.patch)
 
         /// <summary>
         /// Authenticate with SimpleUsers.
@@ -44,6 +44,13 @@ namespace PlayerIOClient
         public static SteamConnect SteamConnect(string gameId, string appId, string sessionTicket, string connectionId = "public")  =>
             new Lazy<SteamConnect>(() => new SteamConnect(gameId, appId, sessionTicket, connectionId)).Value;
 
+        /// <summary> 
+        /// Connect to Player.IO using as the given user.
+        /// </summary>
+        /// <param name="gameId"> The ID of the game you wish to connect to. This value can be found in the admin panel. </param>
+        /// <param name="connectionId">The ID of the connection, as given in the settings section of the admin panel. 'public' should be used as the default. </param>
+        /// <param name="authenticationArguments"> A dictionary of arguments for the given connection. </param>
+        /// <param name="playerInsightSegments"> Custom segments for the user in PlayerInsight. </param>
         public static Client Authenticate(string gameId, string connectionId, Dictionary<string, string> authenticationArguments, string[] playerInsightSegments = null)
         {
             if (authenticationArguments?.ContainsKey("secureSimpleUserPasswordsOverHttp") == true && authenticationArguments["secureSimpleUserPasswordsOverHttp"] == "true")
@@ -74,7 +81,9 @@ namespace PlayerIOClient
             };
         }
 
-        /// <summary> Connects to a game based on Player.IO as the given user using basic authentiation. </summary>
+        /// <summary> 
+        /// Connects to a game based on Player.IO as the given user using basic authentiation.
+        /// </summary>
         /// <param name="gameId">
         /// The ID of the game you wish to connect to. This value can be found in the admin panel.
         /// </param>
@@ -91,7 +100,9 @@ namespace PlayerIOClient
         public static Client Connect(string gameId, string connectionId, string userId, string auth) =>
             PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(("userId", userId), ("auth", auth)));
 
-        /// <summary> Calculate an auth hash for use in basic authenticcation. </summary>
+        /// <summary>
+        /// Calculate an auth hash for use in basic authenticcation.
+        /// </summary>
         /// <param name="userId"> The UserID to use when generating the hash. </param>
         /// <param name="sharedSecret">
         /// The shared secret to use when generating the hash. This must be the same value as the one
@@ -126,6 +137,46 @@ namespace PlayerIOClient
 
             var unixTime = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
             return unixTime + ":" + ToHexString(new HMACSHA256(Encoding.UTF8.GetBytes(sharedSecret)).ComputeHash(Encoding.UTF8.GetBytes(unixTime + ":" + userId)));
+        }
+
+        /// <summary> 
+        /// Register a new Simple User in the specified game.
+        /// </summary>
+        /// <param name="gameId"> The ID of the game you wish to connect to. This value can be found in the admin panel. </param>
+        /// <param name="username"> The username of the new user. </param>
+        /// <param name="password"> The password of the new user. </param>
+        /// <param name="email"> The email of the new user. (optional unless required) </param>
+        /// <param name="captchaKey"> (only if captcha is required) The key of the Captcha image used to get the user to write in the Captcha value </param>
+        /// <param name="captchaValue"> (only if captcha is required) The string the user entered in response to the captcha image </param>
+        /// <param name="extraData"> Any extra data that you wish to store with the user such as gender, birthdate, etc. (optional) </param>
+        /// <param name="partnerId"> The PartnerPay partner id this user should be tagged with, if you are using the PartnerPay system. </param>
+        /// <param name="playerInsightSegments"> Custom segments for the user in PlayerInsight. </param>
+        /// <returns> A new instance of a connected client. </returns>
+        public static Client SimpleRegister(string gameId, string username, string password, string email = null, string captchaKey = null, string captchaValue = null,
+            Dictionary<string, string> extraData = null, string partnerId = null, string[] playerInsightSegments = null)
+        {
+            var (success, response, error) = new PlayerIOChannel().Request<SimpleRegisterArgs, SimpleRegisterOutput>(403, new SimpleRegisterArgs()
+            {
+                GameId = gameId,
+                Username = username,
+                Password = password,
+                Email = email,
+                CaptchaKey = captchaKey,
+                CaptchaValue = captchaValue,
+                ExtraData = DictionaryEx.Convert(extraData),
+                PartnerId = partnerId,
+                PlayerInsightSegments = playerInsightSegments,
+                ClientAPI = "csharp"
+            });
+
+            if (!success)
+                throw error as PlayerIORegistrationError;
+
+            return new Client(new PlayerIOChannel() { Token = response.Token })
+            {
+                PlayerInsight = new PlayerInsight(response.PlayerInsightState),
+                ConnectUserId = response.UserId,
+            };
         }
     }
     
@@ -326,8 +377,7 @@ namespace PlayerIOClient
             return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
                 ("username", this.Username),
                 ("email", this.Email),
-                ("password", this.Password)
-                ));
+                ("password", this.Password)));
         }
 
         public SimpleConnect(string gameId, string usernameOrEmail, string password, string connectionId = "simpleUsers")
