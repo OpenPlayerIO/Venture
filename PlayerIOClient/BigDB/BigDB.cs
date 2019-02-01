@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace PlayerIOClient
@@ -118,6 +119,70 @@ namespace PlayerIOClient
                 }
             }
         }
+    }
+
+    public partial class BigDB
+    {
+        /// <summary> Load a range of database objects from a table using the specified index. </summary>
+        /// <param name="table"> The table to load the database object from. </param>
+        /// <param name="index"> The name of the index to query for the database object. </param>
+        /// <param name="indexPath">
+        /// Where in the index to start the range search: An array of objects of the same types as the index properties,specifying where in the index to start loading database objects from. 
+        /// For instance, in the index [Mode,Map,Score] you might use new object[]{"expert","skyland"} as the indexPath and use the start and stop arguments to determine the range of scores 
+        /// you wish to return. IndexPath can be set to null if there is only one property in the index.
+        /// </param>
+        /// <param name="start">
+        /// Where to start the range search. For instance, if the index is [Mode,Map,Score] and indexPath is ["expert","skyland"], then start defines the minimum score to include in the results. </param>
+        /// <param name="stop">
+        /// Where to stop the range search. For instance, if the index is [Mode,Map,Score] and indexPath is ["expert","skyland"], then stop defines the maximum score to include in the results. </param>
+        /// <param name="limit"> The maximum amount of objects to return. </param>
+        /// <returns> An array containing the database objects that were found in the search. </returns>
+        public DatabaseObject[] LoadRange(string table, string index, object[] indexPath, object start, object stop, int limit)
+        {
+            var (success, response, error) = this.Channel.Request<LoadIndexRangeArgs, LoadIndexRangeOutput>(97, new LoadIndexRangeArgs()
+            {
+                Table = table,
+                Index = index,
+                StartIndexValue = DatabaseEx.MakeRange(indexPath, start),
+                StopIndexValue = DatabaseEx.MakeRange(indexPath, stop),
+                Limit = limit
+            });
+
+            if (!success)
+                throw new PlayerIOError(error.ErrorCode, error.Message);
+
+            if (response.Objects == null || !response.Objects.Any())
+                return new DatabaseObject[] { };
+
+            return response.Objects.Select(o => new DatabaseObject(this, table, o.Key, o.Version, o.Properties)).ToArray();
+        }
+
+        /// <summary>
+        /// Load a database object from a table using the specified index.
+        /// </summary>
+        /// <param name="table"> The table to load the database object from. </param>
+        /// <param name="index"> The name of the index to query for the database object. </param>
+        /// <param name="indexValue"> An array of objects of the same types as the index properties, specifying which object to load. </param>
+        /// <returns> The database object found, or null if no object was found. </returns>
+        public DatabaseObject LoadSingle(string table, string index, params object[] indexValue)
+        {
+            var (success, response, error) = this.Channel.Request<LoadMatchingObjectsArgs, LoadMatchingObjectsOutput>(94, new LoadMatchingObjectsArgs()
+            {
+                Table = table,
+                Index = index,
+                IndexValue = indexValue.Select(o => DatabaseEx.Create(o)).ToList(),
+                Limit = 1
+            });
+
+            if (!success)
+                throw new PlayerIOError(error.ErrorCode, error.Message);
+
+            if (response.Objects == null || !response.Objects.Any())
+                return null;
+
+            return new DatabaseObject(this, table, response.Objects.First().Key, response.Objects.First().Version, response.Objects.First().Properties);
+        }
+
 
         /// <summary>
         /// Load the database object corresponding to the ConnectUserId of the client from the PlayerObjects table.

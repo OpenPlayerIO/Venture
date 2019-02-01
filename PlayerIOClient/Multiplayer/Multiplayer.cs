@@ -123,7 +123,7 @@ namespace PlayerIOClient
 
         /// <summary> Creates a multiplayer room (if it doesn't exists already), and joins it. </summary>
         /// <param name="roomId"> The ID of the room you wish to (create and then) join. </param>
-        /// <param name="serverType">
+        /// <param name="roomType">
         /// If the room doesn't exists: The name of the room type you wish to run the room as. This
         /// value should match one of the 'RoomType(...)' attributes of your uploaded code. A room
         /// type of 'bounce' is always available.
@@ -138,12 +138,12 @@ namespace PlayerIOClient
         /// <param name="joinData">
         /// Data to send to the room with additional information about the join.
         /// </param>
-        public Connection CreateJoinRoom(string roomId, string serverType, bool visible = true, Dictionary<string, string> roomData = null, Dictionary<string, string> joinData = null)
+        public Connection CreateJoinRoom(string roomId, string roomType, bool visible = true, Dictionary<string, string> roomData = null, Dictionary<string, string> joinData = null)
         {
             var (success, response, error) = this.Channel.Request<CreateJoinRoomArgs, CreateJoinRoomOutput>(27, new CreateJoinRoomArgs
             {
                 RoomId = roomId,
-                ServerType = serverType,
+                RoomType = roomType,
                 Visible = visible,
                 RoomData = roomData,
                 JoinData = joinData,

@@ -131,6 +131,19 @@ namespace PlayerIOClient
             }
         }
 
+        internal static List<ValueObject> MakeRange(object[] indexPath, object tail)
+        {
+            var result = new object[((indexPath == null) ? 0 : indexPath.Length) + ((tail == null) ? 0 : 1)];
+
+            if (indexPath != null)
+                Array.Copy(indexPath, result, indexPath.Length);
+
+            if (tail != null)
+                result[result.Length - 1] = tail;
+
+            return result.Select(value => DatabaseEx.Create(value)).ToList();
+        }
+
         internal static ValueObject Create(object value)
         {
             switch (value)

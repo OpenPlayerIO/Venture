@@ -183,9 +183,9 @@ namespace PlayerIOClient
         /// Persist the database object to the server, using optimistic locking if specified.
         /// </summary>
         /// <param name="useOptimisticLock"> If true, the save will only be completed if the database object has not changed in BigDB since this instance was loaded. </param>
-        public void Save(bool useOptimisticLock = false)
+        public void Save(bool useOptimisticLock = false, bool createIfMissing = true)
         {
-            this.Save(useOptimisticLock, new Callback(() => { }), new Callback<PlayerIOError>((error) => { }));
+            this.Save(useOptimisticLock, createIfMissing, new Callback(() => { }), new Callback<PlayerIOError>((error) => { }));
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace PlayerIOClient
         /// <param name="useOptimisticLock"> If true, the save will only be completed if the database object has not changed in BigDB since this instance was loaded. </param>
         /// <param name="successCallback"> A callback invoked if the database object was successfully persisted to BigDB. </param>
         /// <param name="errorCallback"> A callback invoked if there was an issue persisting the database object to BigDB. </param>
-        public void Save(bool useOptimisticLock, Callback successCallback, Callback<PlayerIOError> errorCallback)
+        public void Save(bool useOptimisticLock, bool createIfMissing, Callback successCallback, Callback<PlayerIOError> errorCallback)
         {
             if (this.Owner == null)
                 throw new PlayerIOError(ErrorCode.GeneralError, "You can only save database objects which are root objects in BigDB.");
@@ -212,7 +212,7 @@ namespace PlayerIOClient
                     OnlyIfVersion = useOptimisticLock ? this.Version : null,
                     Changes = DatabaseEx.FromDatabaseObject(this)
                 }
-            }, false);
+            }, createIfMissing);
         }
 
         internal BigDB Owner { get; set; }

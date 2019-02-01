@@ -19,8 +19,46 @@ namespace PlayerIOClient
         public new object[] Values => Properties.Values.ToArray();
         public object this[uint index] => index < Values.Length - 1 ? Values[index] ?? null : throw new IndexOutOfRangeException(nameof(index));
 
-        public void Set(uint index, object value) => SetProperty(index.ToString(), value);
-        public void Add(object value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Set(uint index, object value) => SetProperty(index.ToString(), value) as DatabaseArray;
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public DatabaseArray Add(object value) => Set((uint)this.Properties.Count, value);
+
+        /// <summary> Add the given string value to the array. </summary>
+        public DatabaseArray Add(string value) => Set((uint)this.Properties.Count, value);
+
+        /// <summary> Add the given int value to the array. </summary>
+        public DatabaseArray Add(int value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given uint value to the array. </summary>
+        public DatabaseArray Add(uint value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given long value to the array. </summary>
+        public DatabaseArray Add(long value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given ulong value to the array. </summary>
+        public DatabaseArray Add(ulong value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given float value to the array. </summary>
+        public DatabaseArray Add(float value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given double value to the array. </summary>
+        public DatabaseArray Add(double value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given boolean value to the array. </summary>
+        public DatabaseArray Add(bool value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given byte array value to the array. </summary>
+        public DatabaseArray Add(byte[] value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given date time value to the array. </summary>
+        public DatabaseArray Add(DateTime value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given object to the array. </summary>
+        public DatabaseArray Add(DatabaseObject value) => Set((uint)this.Properties.Count, value);
+        
+        /// <summary> Add the given array to the array. </summary>
+        public DatabaseArray Add(DatabaseArray value) => Set((uint)this.Properties.Count, value);
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override DatabaseObject SetProperty(string index, object value)
