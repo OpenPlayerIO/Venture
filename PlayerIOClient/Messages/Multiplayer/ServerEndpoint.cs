@@ -30,5 +30,10 @@ namespace PlayerIOClient
             this.Address = address;
             this.Port = port;
         }
+
+        public ServerEndPoint()
+        {
+
+        }
     }
 }
