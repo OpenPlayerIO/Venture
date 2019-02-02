@@ -4,6 +4,11 @@
 </p>
 <h2 align="center">An open-source alternative to PlayerIOClient for .NET Core.</h2>
 
+[![Build status](https://ci.appveyor.com/api/projects/status/0f4k6vj6aoa2r8k0?svg=true)](https://ci.appveyor.com/project/atillabyte/venture)
+[![Nuget](https://img.shields.io/nuget/v/Venture.svg)](https://www.nuget.org/packages/Venture/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FOpenPlayerIO%2FVenture.svg?type=small)](https://app.fossa.io/projects/git%2Bgithub.com%2FOpenPlayerIO%2FVenture?ref=badge_small)
+
 ## Getting Started
 The usage of this library is slightly different than the client [Player.IO](https://playerio.com) offers,
 although the functionality is essentially the same with several additional benefits and features which will be further detailed below.
@@ -15,7 +20,7 @@ var simple = PlayerIO.SimpleConnect("game-id", "username-or-email", "password");
 var kong = PlayerIO.KongregateConnect("game-id", "user-id", "token");
 var facebook = PlayerIO.FacebookConnect("game-id", "access-token");
 var armor = PlayerIO.ArmorGamesConnect("game-id", "user-id", "token");
-var steam= PlayerIO.SteamConnect("game-id", "app-id", "session-ticket");
+var steam = PlayerIO.SteamConnect("game-id", "app-id", "session-ticket");
 ```
 
 ### Multiplayer
@@ -48,7 +53,7 @@ PlayerIO.SimpleRegister("game-id", "username", "password", "email", key, "captch
 ### BigDB
 
 #### You can create, load and delete database objects from BigDB as well as serialize and deserialize them for local storage.
-#### The serializtion uses [TSON](https://githb.com/atillabyte/tson) and can be restored back into a database object with `DatabaseObject.LoadFromString()`
+#### The serializtion uses [TSON](https://github.com/atillabyte/tson/) and can be restored back into a database object with `DatabaseObject.LoadFromString()`
 ```csharp
 client.BigDB.LoadMyPlayerObject()
             .Set("Username", "Alice")
