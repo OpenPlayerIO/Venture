@@ -20,7 +20,7 @@ var simple = PlayerIO.SimpleConnect("game-id", "username-or-email", "password");
 var kong = PlayerIO.KongregateConnect("game-id", "user-id", "token");
 var facebook = PlayerIO.FacebookConnect("game-id", "access-token");
 var armor = PlayerIO.ArmorGamesConnect("game-id", "user-id", "token");
-var steam= PlayerIO.SteamConnect("game-id", "app-id", "session-ticket");
+var steam = PlayerIO.SteamConnect("game-id", "app-id", "session-ticket");
 ```
 
 ### Multiplayer
@@ -53,7 +53,7 @@ PlayerIO.SimpleRegister("game-id", "username", "password", "email", key, "captch
 ### BigDB
 
 #### You can create, load and delete database objects from BigDB as well as serialize and deserialize them for local storage.
-#### The serializtion uses [TSON](https://githb.com/atillabyte/tson) and can be restored back into a database object with `DatabaseObject.LoadFromString()`
+#### The serializtion uses [TSON](https://github.com/atillabyte/tson/) and can be restored back into a database object with `DatabaseObject.LoadFromString()`
 ```csharp
 client.BigDB.LoadMyPlayerObject()
             .Set("Username", "Alice")
