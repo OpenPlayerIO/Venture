@@ -124,7 +124,7 @@ namespace PlayerIOClient
             }
 
             this.MessageDeserializer.AddBytes(received);
-            this.Stream.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
+            this.Stream?.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
