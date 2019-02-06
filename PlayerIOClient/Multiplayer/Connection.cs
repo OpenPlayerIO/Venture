@@ -75,20 +75,28 @@ namespace PlayerIOClient
         
         private readonly BinaryDeserializer MessageDeserializer;
 
-        public void Send(string type, params object[] arguments)
-        {
-            var serialized = new BinarySerializer().Serialize(new Message(type, arguments));
+        /// <summary>
+        /// Send a message to the connected client without first having to construct a Message object.
+        /// </summary>
+        /// <param name="type"> The type of message to send. </param>
+        /// <param name="parameters"> The values to place within the message to be sent. </param>
+        /// <returns> A boolean representing whether the socket successfully sent the message. </returns>
+        public bool Send(string type, params object[] parameters) => this.Send(new Message(type, parameters));
 
-            if (this.Socket != null && this.Socket.Connected)
-                this.Socket.Send(serialized);
-        }
-
-        public void Send(Message message)
+        /// <summary> Send a message to the connected client. </summary>
+        /// <param name="message"> The message to send. </param>
+        /// <returns> A boolean representing whether the socket successfully sent the message. </returns>
+        public bool Send(Message message)
         {
             var serialized = new BinarySerializer().Serialize(message);
 
             if (this.Socket != null && this.Socket.Connected)
-                this.Socket.Send(serialized);
+            {
+                this.Socket.Send(serialized, 0, serialized.Length, SocketFlags.None, out var status);
+                return (status == SocketError.Success);
+            }
+
+            return false;
         }
 
         public void Disconnect()

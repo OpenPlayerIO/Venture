@@ -54,7 +54,7 @@ namespace PlayerIOClient
             {
                 socket.IOControl((IOControlCode)(-1744830460), keepAliveValues, null);
             }
-            catch (NotImplementedException)
+            catch
             {
             }
         }
