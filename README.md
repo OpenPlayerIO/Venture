@@ -37,7 +37,7 @@ connection.Send("init");
 if (PlayerIO.ChangeEmail("game-id", "current-email", "password", "new-email"))
     Console.WriteLine("Email changed!");
 
-if (PlayerIO.ChangeEmail("game-id", "email", "current-password", "new-password"))
+if (PlayerIO.ChangePassword("game-id", "email", "current-password", "new-password"))
     Console.WriteLine("Password changed!");
 ```
 
