@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace PlayerIOClient
 {
@@ -69,7 +70,46 @@ namespace PlayerIOClient
             return new Client(new PlayerIOChannel() { Token = playerToken }, gameId);
         }
 
-        private PlayerIOChannel Channel { get; }
+        /// <summary>
+        /// A class containing methods for use with the advanced static Client Create() method.
+        /// </summary>
+        public static class CreateToken
+        {
+            public static (string joinKey, string roomId, ServerEndPoint[] endpoints) CreateJoinRoom(Client client, string roomId, string roomType, bool visible = true, Dictionary<string, string> roomData = null, Dictionary<string, string> joinData = null)
+            {
+                var (success, response, error) = client.Channel.Request<CreateJoinRoomArgs, CreateJoinRoomOutput>(27, new CreateJoinRoomArgs
+                {
+                    RoomId = roomId,
+                    RoomType = roomType,
+                    Visible = visible,
+                    RoomData = roomData,
+                    JoinData = joinData,
+                    IsDevRoom = client.Multiplayer.DevelopmentServer != null
+                });
+
+                if (!success)
+                    throw new PlayerIOError(error.ErrorCode, error.Message);
+
+                return (response.JoinKey, response.RoomId, response.Endpoints);
+            }
+
+            public static (string joinKey, ServerEndPoint[] endpoints) JoinRoom(Client client, string roomId, Dictionary<string, string> joinData = null)
+            {
+                var (success, response, error) = client.Channel.Request<JoinRoomArgs, JoinRoomOutput>(24, new JoinRoomArgs
+                {
+                    RoomId = roomId,
+                    JoinData = DictionaryEx.Convert(joinData),
+                    IsDevRoom = client.Multiplayer.DevelopmentServer != null
+                });
+
+                if (!success)
+                    throw new PlayerIOError(error.ErrorCode, error.Message);
+
+                return (response.JoinKey, response.Endpoints);
+            }
+        }
+
+        internal PlayerIOChannel Channel { get; }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool Equals(object obj) => base.Equals(obj);
