@@ -12,37 +12,226 @@ namespace PlayerIOClient
     /// </summary>
     public static class PlayerIO
     {
-        private static string LibraryVersion => "1.5.3"; // Venture version (major.minor.patch)
+        private static string LibraryVersion => "1.6.0"; // Venture version (major.minor.patch)
 
         /// <summary>
-        /// Authenticate with SimpleUsers.
+        /// Authenticate with SimpleUser connection type using the username or email address and password provided.
         /// </summary>
-        public static SimpleConnect SimpleConnect(string gameId, string usernameOrEmail, string password, string connectionId = "simpleUsers")
-            => new Lazy<SimpleConnect>(() => new SimpleConnect(gameId, usernameOrEmail, password, connectionId)).Value;
+        public static Client SimpleConnect(string gameId, string usernameOrEmail, string password, string connectionId = "public")
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(usernameOrEmail))
+                throw new ArgumentException("A username or email must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("A password must be specified in order to use this method.");
+
+            return PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(
+                ("username", usernameOrEmail.Contains("@") ? null : usernameOrEmail),
+                ("email", usernameOrEmail.Contains("@") ? usernameOrEmail : null),
+                ("password", password)));
+        }
 
         /// <summary>
-        /// Authenticate with Facebook.
+        /// Change the password for a simple user with the provided username or email address, and valid password.
         /// </summary>
-        public static FacebookConnect FacebookConnect(string gameId, string accessToken, string connectionId = "public")
-            => new Lazy<FacebookConnect>(() => new FacebookConnect(gameId, accessToken, connectionId)).Value;
+        /// <returns> If the change was successful, returns <see langword="true"/>. </returns>
+        public static bool ChangePassword(string gameId, string usernameOrEmail, string password, string newPassword, string connectionId = "public")
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(usernameOrEmail))
+                throw new ArgumentException("A username or email must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(newPassword))
+                throw new ArgumentException("You must specify a new password to use for this method.");
+
+            var response = false;
+
+            try
+            {
+                PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(
+                    ("changepassword", "true"),
+                    ("username", usernameOrEmail.Contains("@") ? null : usernameOrEmail),
+                    ("email", usernameOrEmail.Contains("@") ? usernameOrEmail : null),
+                    ("password", password),
+                    ("newpassword", newPassword)
+                ));
+            }
+            catch (PlayerIOError error)
+            {
+                if (error.ErrorCode == ErrorCode.GeneralError && error.Message.ToLower().Contains("password changed"))
+                    response = true;
+            }
+
+            return response;
+        }
 
         /// <summary>
-        /// Authenticate with Kongregate.
+        /// Change the email for a simple user with the provided username or email address, and valid password.
         /// </summary>
-        public static KongregateConnect KongregateConnect(string gameId, string userId, string token, string connectionId = "public")
-            => new Lazy<KongregateConnect>(() => new KongregateConnect(gameId, userId, token, connectionId)).Value;
+        /// <returns> If the change was successful, returns <see langword="true"/>. </returns>
+        public static bool ChangeEmail(string gameId, string usernameOrEmail, string password, string newEmail, string connectionId = "public")
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(usernameOrEmail))
+                throw new ArgumentException("A username or email must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(newEmail))
+                throw new ArgumentException("You must specify a new email to use for this method.");
+
+            var response = false;
+
+            try
+            {
+                PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(
+                    ("changeemail", "true"),
+                    ("username", usernameOrEmail.Contains("@") ? null : usernameOrEmail),
+                    ("email", usernameOrEmail.Contains("@") ? usernameOrEmail : null),
+                    ("password", password),
+                    ("newemail", newEmail)
+                ));
+            }
+            catch (PlayerIOError error)
+            {
+                if (error.ErrorCode == ErrorCode.GeneralError && error.Message.ToLower().Contains("email address changed"))
+                    response = true;
+            }
+
+            return response;
+        }
 
         /// <summary>
-        /// Authenticate with Armor Games.
+        /// Create a captcha image and key from the specified game, to be used for registrations where the added security of captcha is required.
         /// </summary>
-        public static ArmorGamesConnect ArmorGamesConnect(string gameId, string userId, string token, string connectionId = "public")
-            => new Lazy<ArmorGamesConnect>(() => new ArmorGamesConnect(gameId, userId, token, connectionId)).Value;
+        /// <param name="width"> The width of the captcha image. </param>
+        /// <param name="height"> The height of the captcha image. </param>
+        public static SimpleCaptcha CreateCaptcha(string gameId, int width, int height)
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            var (success, response, error) = new PlayerIOChannel().Request<SimpleGetCaptchaArgs, SimpleGetCaptchaOutput>(415, new SimpleGetCaptchaArgs
+            {
+                GameId = gameId,
+                Width = width,
+                Height = height
+            });
+
+            if (!success)
+                throw new PlayerIOError(error.ErrorCode, error.Message);
+
+            return new SimpleCaptcha(response.CaptchaKey, response.CaptchaImageUrl);
+        }
 
         /// <summary>
-        /// Authenticate with Steam.
+        /// Create a captcha image and key for the game the client is connected to, for use in registrations where the added security of captcha is required.
         /// </summary>
-        public static SteamConnect SteamConnect(string gameId, string appId, string sessionTicket, string connectionId = "public")  =>
-            new Lazy<SteamConnect>(() => new SteamConnect(gameId, appId, sessionTicket, connectionId)).Value;
+        /// <param name="width"> The width of the captcha image. </param>
+        /// <param name="height"> The height of the captcha image. </param>
+        public static SimpleCaptcha CreateCaptcha(this Client client, int width, int height)
+            => PlayerIO.CreateCaptcha(client.GameId, width, height);
+
+        /// <summary>
+        /// Check whether a simple user currently exists with the details provided.
+        /// </summary>
+        /// <returns> If the simple user exists already, this method returns <see langword="true"/> </returns>
+        public static bool SimpleUserIsRegistered(string gameId, string username, string email, string connectionId = "public")
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(email))
+                throw new ArgumentException("A username or email must be specified in order to use this method.");
+
+            var response = true;
+
+            try
+            {
+                PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(
+                    ("checkusername", "true"),
+                    ("username", username),
+                    ("email", email)
+                ));
+            }
+            catch (PlayerIOError error)
+            {
+                if (error.ErrorCode == ErrorCode.UnknownUser)
+                    response = false;
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Authenticate with Facebook using the Access Token provided.
+        /// </summary>
+        public static Client FacebookConnect(string gameId, string accessToken, string connectionId = "public")
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(accessToken))
+                throw new ArgumentException("A Facebook access token must be specified in order to use this method.");
+
+            return PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(("accessToken", accessToken)));
+        }
+
+        /// <summary>
+        /// Authenticate with Steam using the Steam App ID and Steam Session Ticket provided.
+        /// </summary>
+        public static Client SteamConnect(string gameId, string appId, string sessionTicket, string connectionId = "public")
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(appId))
+                throw new ArgumentException("A Steam App ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(sessionTicket))
+                throw new ArgumentException("A Steam Session Ticket must be specified in order to use this method.");
+
+            return PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(("steamSessionTicket", sessionTicket), ("steamAppId", appId)));
+        }
+
+        /// <summary>
+        /// Authenticate with Kongregate using the userId and token provided.
+        /// </summary>
+        public static Client KongregateConnect(string gameId, string userId, string token, string connectionId = "public")
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(userId))
+                throw new ArgumentException("A Kongregate userId must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(token))
+                throw new ArgumentException("A Kongregate token must be specified in order to use this method.");
+
+            return PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(("userId", userId), ("gameAuthToken", token)));
+        }
+
+        /// <summary>
+        /// Authenticate with ArmorGames using the userId and token provided.
+        /// </summary>
+        public static Client ArmorGamesConnect(string gameId, string userId, string token, string connectionId = "public")
+        {
+            if (string.IsNullOrEmpty(gameId))
+                throw new ArgumentException("A game ID must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(userId))
+                throw new ArgumentException("An ArmorGames userId must be specified in order to use this method.");
+
+            if (string.IsNullOrEmpty(token))
+                throw new ArgumentException("An ArmorGames auth token must be specified in order to use this method.");
+
+            return PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(("userId", userId), ("authToken", token)));
+        }
 
         /// <summary> 
         /// Connect to Player.IO using as the given user.
@@ -74,7 +263,7 @@ namespace PlayerIOClient
             if (!success)
                 throw new PlayerIOError(error.ErrorCode, error.Message);
 
-            return new Client(new PlayerIOChannel() { Token = response.Token })
+            return new Client(new PlayerIOChannel() { Token = response.Token }, gameId)
             {
                 PlayerInsight = new PlayerInsight(response.PlayerInsightState),
                 ConnectUserId = response.UserId,
@@ -173,357 +362,11 @@ namespace PlayerIOClient
             if (!success)
                 throw error as PlayerIORegistrationError;
 
-            return new Client(new PlayerIOChannel() { Token = response.Token })
+            return new Client(new PlayerIOChannel() { Token = response.Token }, gameId)
             {
                 PlayerInsight = new PlayerInsight(response.PlayerInsightState),
                 ConnectUserId = response.UserId,
             };
         }
-    }
-    
-    /// <summary>
-    /// Authenticate with Kongregate.
-    /// </summary>
-    public class KongregateConnect
-    {
-        /// <summary>
-        /// Authenticate with the Kongregate userId and token provided.
-        /// </summary>
-        public Client Connect()
-        {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.Token))
-                throw new ArgumentException("A Kongregate token must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.UserId))
-                throw new ArgumentException("A Kongregate userId must be specified in order to use this method.");
-
-            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("userId", this.UserId), ("gameAuthToken", this.Token)));
-        }
-
-        public KongregateConnect(string gameId, string userId, string token, string connectionId = "public")
-        {
-            this.GameId = gameId;
-            this.UserId = userId;
-            this.Token = token;
-            this.ConnectionId = connectionId;
-        }
-
-        private string ConnectionId { get; set; }
-        private string GameId { get; }
-        private string UserId { get; }
-        private string Token { get; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
-    }
-
-    /// <summary>
-    /// Authenticate with Armor Games.
-    /// </summary>
-    public class ArmorGamesConnect
-    {
-        /// <summary>
-        /// Authenticate with the ArmorGames userId and auth token provided.
-        /// </summary>
-        public Client Connect()
-        {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.Token))
-                throw new ArgumentException("An ArmorGames auth token must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.UserId))
-                throw new ArgumentException("An ArmorGames userId must be specified in order to use this method.");
-
-            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("userId", this.UserId), ("authToken", this.Token)));
-        }
-
-        public ArmorGamesConnect(string gameId, string userId, string token, string connectionId = "public")
-        {
-            this.GameId = gameId;
-            this.UserId = userId;
-            this.Token = token;
-            this.ConnectionId = connectionId;
-        }
-
-        private string ConnectionId { get; set; }
-        private string GameId { get; set; }
-        private string Token { get; set; }
-        private string UserId { get; set; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
-    }
-
-    /// <summary>
-    /// Authenticate with Steam.
-    /// </summary>
-    public class SteamConnect
-    {
-        /// <summary>
-        /// Authenticate with the Steam App ID and Session Ticket provided.
-        /// </summary>
-        public Client Connect()
-        {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.SteamAppId))
-                throw new ArgumentException("A Steam App ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.SteamSessionTicket))
-                throw new ArgumentException("A Steam Session Ticket must be specified in order to use this method.");
-
-            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("steamSessionTicket", this.SteamSessionTicket), ("steamAppId", this.SteamAppId)));
-        }
-
-        public SteamConnect(string gameId, string appId, string sessionTicket, string connectionId = "public")
-        {
-            this.GameId = gameId;
-            this.SteamAppId = appId;
-            this.SteamSessionTicket = sessionTicket;
-            this.ConnectionId = connectionId;
-        }
-        
-        private string ConnectionId { get; set; }
-        private string GameId { get; set; }
-        private string SteamAppId { get; set; }
-        private string SteamSessionTicket { get; set; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
-    }
-
-    /// <summary>
-    /// Authenticate with Facebook.
-    /// </summary>
-    public class FacebookConnect
-    {
-        /// <summary>
-        /// Authenticate with the Facebook token provided.
-        /// </summary>
-        public Client Connect()
-        {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.AccessToken))
-                throw new ArgumentException("A Facebook access token must be specified in order to use this method.");
-
-            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(("accessToken", this.AccessToken)));
-        }
-
-        public FacebookConnect(string gameId, string accessToken, string connectionId = "public")
-        {
-            this.GameId = gameId;
-            this.AccessToken = accessToken;
-            this.ConnectionId = connectionId;
-        }
-
-        private string ConnectionId { get; set; }
-        private string GameId { get; set; }
-        private string AccessToken { get; set; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
-    }
-
-    /// <summary>
-    /// Authenticate with Simple Users.
-    /// </summary>
-    public class SimpleConnect
-    {
-        /// <summary>
-        /// Authenticate with the password plus the username and/or email provided.
-        /// </summary>
-        public Client Connect()
-        {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
-                throw new ArgumentException("A username or email must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.Password))
-                throw new ArgumentException("A password must be specified in order to use this method.");
-
-            return PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
-                ("username", this.Username),
-                ("email", this.Email),
-                ("password", this.Password)));
-        }
-
-        public SimpleConnect(string gameId, string usernameOrEmail, string password, string connectionId = "simpleUsers")
-        {
-            this.GameId = gameId;
-            this.Username = usernameOrEmail.Contains("@") ? null : usernameOrEmail;
-            this.Email = usernameOrEmail.Contains("@") ? usernameOrEmail : null;
-            this.Password = password;
-            this.ConnectionId = connectionId;
-        }
-
-        /// <summary>
-        /// Create a captcha image and key, to be used for registrations where the added security of captcha is required.
-        /// </summary>
-        /// <param name="width"> The width of the captcha image. </param>
-        /// <param name="height"> The height of the captcha image. </param>
-        public static SimpleCaptcha GetSimpleCaptcha(string gameId, int width, int height)
-        {
-            if (string.IsNullOrEmpty(gameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            var (success, response, error) = new PlayerIOChannel().Request<SimpleGetCaptchaArgs, SimpleGetCaptchaOutput>(415, new SimpleGetCaptchaArgs
-            {
-                GameId = gameId,
-                Width = width,
-                Height = height
-            });
-
-            if (!success)
-                throw new PlayerIOError(error.ErrorCode, error.Message);
-
-            return new SimpleCaptcha(response.CaptchaKey, response.CaptchaImageUrl);
-        }
-
-        /// <summary>
-        /// Check whether a simple user currently exists with the details provided.
-        /// </summary>
-        /// <returns> If the simple user exists already, this method returns <see langword="true"/> </returns>
-        public static bool RegistrationCheck(string gameId, string username, string email, string connectionId = "simpleUsers")
-        {
-            if (string.IsNullOrEmpty(gameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(email))
-                throw new ArgumentException("A username or email must be specified in order to use this method.");
-
-            var response = true;
-
-            try
-            {
-                PlayerIO.Authenticate(gameId, connectionId, DictionaryEx.Create(
-                    ("checkusername", "true"),
-                    ("username", username),
-                    ("email", email)
-                ));
-            }
-            catch (PlayerIOError error)
-            {
-                if (error.ErrorCode == ErrorCode.UnknownUser)
-                    response = false;
-            }
-
-            return response;
-        }
-
-        /// <summary>
-        /// Change the password for a simple user with the provided username or email address, and valid password.
-        /// </summary>
-        /// <returns> If the change was successful, returns <see langword="true"/>. </returns>
-        public bool ChangePassword(string newPassword)
-        {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
-                throw new ArgumentException("A username or email must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(newPassword))
-                throw new ArgumentException("You must specify a new password to use for this method.");
-
-            var response = false;
-
-            try
-            {
-                PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
-                    ("changepassword", "true"),
-                    ("username", this.Username),
-                    ("email", this.Email),
-                    ("newpassword", newPassword)
-                ));
-            }
-            catch (PlayerIOError error)
-            {
-                if (error.ErrorCode == ErrorCode.GeneralError && error.Message.ToLower().Contains("password changed"))
-                    response = true;
-            }
-
-            return response;
-        }
-
-        public bool ChangeEmail(string newEmail)
-        {
-            if (string.IsNullOrEmpty(this.GameId))
-                throw new ArgumentException("A game ID must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(this.Username) && string.IsNullOrEmpty(this.Email))
-                throw new ArgumentException("A username or email must be specified in order to use this method.");
-
-            if (string.IsNullOrEmpty(newEmail))
-                throw new ArgumentException("You must specify a new email to use for this method.");
-
-            var response = false;
-
-            try
-            {
-                PlayerIO.Authenticate(this.GameId, this.ConnectionId, DictionaryEx.Create(
-                    ("changeemail", "true"),
-                    ("username", this.Username),
-                    ("email", this.Email),
-                    ("password", this.Password),
-                    ("newemail", newEmail)
-                ));
-            }
-            catch (PlayerIOError error)
-            {
-                if (error.ErrorCode == ErrorCode.GeneralError && error.Message.ToLower().Contains("email address changed"))
-                    response = true;
-            }
-
-            return response;
-        }
-
-        private string GameId { get; set; }
-        private string ConnectionId { get; set; }
-        private string Username { get; set; }
-        private string Email { get; set; }
-        private string Password { get; set; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool Equals(object obj) => base.Equals(obj);
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => base.GetHashCode();
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => base.ToString();
     }
 }

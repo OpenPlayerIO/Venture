@@ -10,7 +10,7 @@ namespace PlayerIOClient
         /// <summary>
         /// The Player.IO token for this client.
         /// </summary>
-        public string Token { get; internal set; }
+        public string Token => this.Channel.Token;
 
         /// <summary>
         /// The ConnectUserId of this client.
@@ -42,15 +42,31 @@ namespace PlayerIOClient
         /// </summary>
         public ErrorLog ErrorLog { get; }
 
-        internal Client(PlayerIOChannel channel)
+        /// <summary>
+        /// The ID of the game the client is connected to.
+        /// </summary>
+        public string GameId { get; }
+
+        internal Client(PlayerIOChannel channel, string gameId)
         {
             this.Channel = channel;
-            this.Token = channel.Token;
+            this.GameId = gameId;
 
             this.Multiplayer = new Multiplayer(channel);
             this.BigDB = new BigDB(channel);
             this.ErrorLog = new ErrorLog(channel);
             this.PayVault = new PayVault(channel, this.ConnectUserId);
+        }
+
+        /// <summary>
+        /// An optional means of instantiating a client from a Player.IO Player Token, for advanced usage purposes.
+        /// A typical game should most likely use the connection methods in the static PlayerIO class instead.
+        /// </summary>
+        /// <param name="playerToken"> (required) </param>
+        /// <param name="gameId"> (optional) </param>
+        public static Client Create(string playerToken, string gameId)
+        {
+            return new Client(new PlayerIOChannel() { Token = playerToken }, gameId);
         }
 
         private PlayerIOChannel Channel { get; }

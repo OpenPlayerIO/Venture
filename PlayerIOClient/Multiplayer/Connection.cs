@@ -31,10 +31,20 @@ namespace PlayerIOClient
         /// <param name="message"> The reason of disconnecting explained by words. </param>
         public event DisconnectEventHandler OnDisconnect;
         
-        /// <summary> Represents whether the connection is currently connected to a remote host. </summary>
+        /// <summary> A boolean representing whether the connection is currently connected to a remote host. </summary>
         public bool Connected => this.Socket.Connected;
 
-        internal Connection(IPEndPoint endpoint, string joinKey, Dictionary<string, string> joinData)
+        /// <summary>
+        /// An optional means of instantiating a connection from a join key, for advanced usage purposes.
+        /// A typical game should most likely use the CreateJoinRoom/JoinRoom methods in a client instance instead.
+        /// </summary>
+        /// <param name="endpoint"> The game server endpoint. </param>
+        /// <param name="joinKey"> The key provided by the API for the respective game server. </param>
+        /// <param name="joinData"> An optional dictionary containing join data to send during join. </param>
+        public static Connection Create(ServerEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null)
+            => new Connection(new IPEndPoint(Dns.GetHostEntry(endpoint.Address).AddressList[0], endpoint.Port), joinKey, joinData);
+
+        internal Connection(IPEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null)
         {
             this.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.Socket.Connect(endpoint.Address, endpoint.Port);
