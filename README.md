@@ -25,7 +25,7 @@ var steam = PlayerIO.SteamConnect("game-id", "app-id", "session-ticket");
 
 ### Multiplayer
 ```csharp
-var client = PlayerIO.Connect("game-id", "connection-id", "user-id", "auth").Connect();
+var client = PlayerIO.Connect("game-id", "connection-id", "user-id", "auth");
 var connection = client.Multiplayer.CreateJoinRoom("room-id", "room-type");
 
 connection.OnMessage += (con, message) => Console.WriteLine(message);
@@ -34,16 +34,16 @@ connection.Send("init");
 
 ### Account Management
 ```csharp
-if (PlayerIO.SimpleConnect("game-id", "current-email", "password").ChangeEmail("new-email"))
+if (PlayerIO.ChangeEmail("game-id", "current-email", "password", "new-email"))
     Console.WriteLine("Email changed!");
 
-if (PlayerIO.SimpleConnect("game-id", "current-email", "password").ChangePassword("new-password"))
+if (PlayerIO.ChangePassword("game-id", "email", "current-password", "new-password"))
     Console.WriteLine("Password changed!");
 ```
 
 ### Account Registration
 ```csharp
-var captcha = SimpleConnect.GetSimpleCaptcha("game-id", 64, 64);
+var captcha = SimpleConnect.CreateCaptcha("game-id", 64, 64);
 var key = captcha.CaptchaKey; // the required key of the captcha
 var url = captcha.CaptchaImageUrl; // an image containing the captcha text
 
