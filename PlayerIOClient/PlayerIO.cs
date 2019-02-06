@@ -15,6 +15,11 @@ namespace PlayerIOClient
         private static string LibraryVersion => "1.6.0"; // Venture version (major.minor.patch)
 
         /// <summary>
+        /// The seconds to wait for every API request before timing out. (-1 for never)
+        /// </summary>
+        public static int APIRequestTimeout { get; set; } = -1;
+
+        /// <summary>
         /// Authenticate with SimpleUser connection type using the username or email address and password provided.
         /// </summary>
         public static Client SimpleConnect(string gameId, string usernameOrEmail, string password, string connectionId = "public")

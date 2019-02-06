@@ -24,7 +24,7 @@ namespace PlayerIOClient
             {
                 var response = channel.AllowHttpStatus(HttpStatusCode.OK)
                                        .WithHeader("playertoken", this.Token)
-                                       .WithTimeout(seconds: 30)
+                                       .WithTimeout(seconds: PlayerIO.APIRequestTimeout != -1 ? PlayerIO.APIRequestTimeout : 3600)
                                        .Request($"api/{method}")
                                        .PostAsync(new ByteArrayContent(this.ReadAllBytes(stream))).ReceiveBytes().Result;
 
