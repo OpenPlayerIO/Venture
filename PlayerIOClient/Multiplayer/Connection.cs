@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Org.Mentalis.Network.ProxySocket;
 using static PlayerIOClient.BinaryDeserializer;
 
 namespace PlayerIOClient
@@ -41,13 +42,31 @@ namespace PlayerIOClient
         /// <param name="endpoint"> The game server endpoint. </param>
         /// <param name="joinKey"> The key provided by the API for the respective game server. </param>
         /// <param name="joinData"> An optional dictionary containing join data to send during join. </param>
-        public static Connection Create(ServerEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null)
-            => new Connection(new IPEndPoint(Dns.GetHostEntry(endpoint.Address).AddressList[0], endpoint.Port), joinKey, joinData);
+        public static Connection Create(ServerEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null, ProxyOptions proxy = null)
+            => new Connection(new IPEndPoint(Dns.GetHostAddresses(proxy.EndPoint.Address).First(), endpoint.Port), joinKey, joinData);
 
-        internal Connection(IPEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null)
+        internal Connection(IPEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null, ProxyOptions proxy = null)
         {
-            this.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.Socket.Connect(endpoint.Address, endpoint.Port);
+            if (proxy == null)
+            {
+                this.Socket = new ProxySocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                this.Socket.Connect(endpoint.Address, endpoint.Port);
+            }
+            else
+            {
+                this.Socket = new ProxySocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+                this.Socket.ProxyType = proxy.Type == ProxyType.SOCKS4 ? ProxyTypes.Socks4 : proxy.Type == ProxyType.SOCKS5 ? ProxyTypes.Socks5 : ProxyTypes.None;
+                this.Socket.ProxyEndPoint = new IPEndPoint(Dns.GetHostAddresses(proxy.EndPoint.Address).First(), proxy.EndPoint.Port);
+
+                if (!string.IsNullOrEmpty(proxy.Username))
+                    this.Socket.ProxyUser = proxy.Username;
+
+                if (!string.IsNullOrEmpty(proxy.Password))
+                    this.Socket.ProxyUser = proxy.Password;
+
+                this.Socket.Connect(endpoint.Address, endpoint.Port);
+            }
 
             this.Stream = new NetworkStream(this.Socket);
             this.MessageDeserializer = new BinaryDeserializer();
@@ -79,7 +98,7 @@ namespace PlayerIOClient
             };
         }
 
-        private Socket Socket { get; set; }
+        private ProxySocket Socket { get; set; }
         private Stream Stream { get; set; }
         private byte[] Buffer { get; set; } = new byte[ushort.MaxValue];
         
@@ -109,40 +128,53 @@ namespace PlayerIOClient
             return false;
         }
 
-        public void Disconnect()
+        /// <summary>
+        /// A method to forcibly disconnect the current connection from the server.
+        /// </summary>
+        /// <param name="invokeOnDisconnect"> A boolean representing whether the <see cref="OnDisconnect"/> event should be subsequently fired. </param>
+        public void Disconnect(bool invokeOnDisconnect = true)
         {
             if (this.Socket != null && this.Socket.Connected)
             {
                 this.Socket.Disconnect(false);
-                this.OnDisconnect?.Invoke(this, "The connection was forcibly terminated by local client.");
-
                 this.Socket.Dispose();
                 this.Buffer = null;
                 this.Stream = null;
+
+                if (invokeOnDisconnect)
+                    this.OnDisconnect?.Invoke(this, "The connection was forcibly terminated by local client.");
             }
         }
 
         private void ReceiveCallback(IAsyncResult ar)
         {
-            if (!this.Socket.Connected)
+            try
             {
-                if (this.Stream != null)
-                    this.OnDisconnect?.Invoke(this, "The connection was forcibly reset by peer.");
+                if (!this.Socket.Connected)
+                {
+                    if (this.Stream != null)
+                        this.OnDisconnect?.Invoke(this, "The connection was forcibly reset by peer.");
 
+                    return;
+                }
+
+                var length = this.Stream.EndRead(ar);
+                var received = this.Buffer.Take(length).ToArray();
+
+                if (length == 0)
+                {
+                    this.OnDisconnect?.Invoke(this, "The connection was forcibly reset by peer. (receivedBytes == 0)");
+                    return;
+                }
+
+                this.MessageDeserializer.AddBytes(received);
+                this.Stream?.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
+            }
+            catch (SocketException ex)
+            {
+                this.OnDisconnect?.Invoke(this, $"The connection was forcibly reset by peer. (socket error: {ex.ErrorCode})");
                 return;
             }
-
-            var length = this.Stream.EndRead(ar);
-            var received = this.Buffer.Take(length).ToArray();
-
-            if (length == 0)
-            {
-                this.OnDisconnect?.Invoke(this, "The connection was forcibly reset by peer. (receivedBytes == 0)");
-                return;
-            }
-
-            this.MessageDeserializer.AddBytes(received);
-            this.Stream?.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]

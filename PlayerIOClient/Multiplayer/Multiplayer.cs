@@ -51,6 +51,14 @@ namespace PlayerIOClient
         public DevelopmentServer DevelopmentServer = null;
 
         /// <summary>
+        /// If set, multiplayer connections will be created explicitly using the proxy specified.
+        /// <para>
+        /// NOTE: API requests will not be proxied using this property.
+        /// </para>
+        /// </summary>
+        public ProxyOptions ProxyOptions = null;
+
+        /// <summary>
         /// If true, the multiplayer connections will be encrypted using TLS/SSL. Beaware that this will cause a performance degredation by introducting secure connection negotiation latency.
         /// </summary>
         public bool UseSecureConnections { get; set; } // TODO: Implement this.
@@ -143,9 +151,9 @@ namespace PlayerIOClient
             {
                 if (PortCheck.IsPortOpen(endpoint.Address, endpoint.Port, 1000, 3))
                 {
-                    var resolution = Dns.GetHostEntry(endpoint.Address).AddressList[0];
+                    var resolution = Dns.GetHostAddresses(endpoint.Address).First();
 
-                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey, joinData);
+                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey, joinData, this.ProxyOptions);
                 }
             }
 
@@ -190,9 +198,9 @@ namespace PlayerIOClient
             {
                 if (PortCheck.IsPortOpen(endpoint.Address, endpoint.Port, 1000, 3))
                 {
-                    var resolution = Dns.GetHostEntry(endpoint.Address).AddressList[0];
+                    var resolution = Dns.GetHostAddresses(endpoint.Address).First();
 
-                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey, joinData);
+                    return new Connection(new IPEndPoint(resolution, endpoint.Port), response.JoinKey, joinData, this.ProxyOptions);
                 }
             }
 
@@ -202,9 +210,7 @@ namespace PlayerIOClient
         private List<ServerEndPoint> FilterGameEndPoints(List<ServerEndPoint> endpoints)
         {
             if (endpoints == null)
-            {
-                endpoints = new List<ServerEndPoint>(); 
-            }
+                endpoints = new List<ServerEndPoint>();
 
             if (this.DevelopmentServer != null)
             {
