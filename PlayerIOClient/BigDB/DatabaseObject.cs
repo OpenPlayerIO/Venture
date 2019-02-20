@@ -67,6 +67,7 @@ namespace PlayerIOClient
         public ICollection<object> Values => this.Properties.Values;
         public ICollection<string> Keys => this.Properties.Keys;
 
+        public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => this.Properties.GetEnumerator();
         public object this[string property] => this.Properties.ContainsKey(property) ? this.Properties[property] : null;
         public object this[string property, Type type] => this.Get(property, type);
         private object Get(string property, Type type)
@@ -237,7 +238,6 @@ namespace PlayerIOClient
         private const string INVALID_OPEARTION = "The requested method is disabled, please use the public methods instead.";
 
         [EditorBrowsable(EditorBrowsableState.Never)] public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex) => throw new InvalidOperationException(INVALID_OPEARTION);
-        [EditorBrowsable(EditorBrowsableState.Never)] public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => throw new InvalidOperationException(INVALID_OPEARTION);
         [EditorBrowsable(EditorBrowsableState.Never)] public bool Contains(KeyValuePair<string, object> item) => throw new InvalidOperationException(INVALID_OPEARTION);
         [EditorBrowsable(EditorBrowsableState.Never)] public bool Remove(KeyValuePair<string, object> item) => throw new InvalidOperationException(INVALID_OPEARTION);
         [EditorBrowsable(EditorBrowsableState.Never)] public bool TryGetValue(string key, out object value) => throw new InvalidOperationException(INVALID_OPEARTION);
