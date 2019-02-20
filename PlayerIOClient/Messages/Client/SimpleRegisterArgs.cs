@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using System.Collections.Generic;
 
 namespace PlayerIOClient
 {
@@ -18,13 +19,13 @@ namespace PlayerIOClient
         public string Email { get; set; }
 
         [ProtoMember(5)]
-        public string CaptchaKey { get; set; }
+        public List<KeyValuePair> ExtraData { get; set; }
 
         [ProtoMember(6)]
-        public string CaptchaValue { get; set; }
+        public string CaptchaKey { get; set; }
 
         [ProtoMember(7)]
-        public KeyValuePair[] ExtraData { get; set; }
+        public string CaptchaValue { get; set; }
 
         [ProtoMember(8)]
         public string PartnerId { get; set; }
@@ -36,6 +37,6 @@ namespace PlayerIOClient
         public string ClientAPI { get; set; }
 
         [ProtoMember(11)]
-        public KeyValuePair[] ClientInfo { get; set; }
+        public List<KeyValuePair> ClientInfo { get; set; }
     }
 }
