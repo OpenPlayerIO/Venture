@@ -47,26 +47,23 @@ namespace PlayerIOClient
 
         internal Connection(IPEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null, ProxyOptions proxy = null)
         {
-            if (proxy == null)
+            this.Socket = new ProxySocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            if (proxy != null)
             {
-                this.Socket = new ProxySocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                this.Socket.Connect(endpoint.Address, endpoint.Port);
-            }
-            else
-            {
-                this.Socket = new ProxySocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-                this.Socket.ProxyType = proxy.Type == ProxyType.SOCKS4 ? ProxyTypes.Socks4 : proxy.Type == ProxyType.SOCKS5 ? ProxyTypes.Socks5 : ProxyTypes.None;
-                this.Socket.ProxyEndPoint = new IPEndPoint(Dns.GetHostAddresses(proxy.EndPoint.Address).First(), proxy.EndPoint.Port);
+                this.Socket = new ProxySocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+                {
+                    ProxyType = proxy.Type == ProxyType.SOCKS4 ? ProxyTypes.Socks4 : proxy.Type == ProxyType.SOCKS5 ? ProxyTypes.Socks5 : ProxyTypes.None,
+                    ProxyEndPoint = new IPEndPoint(Dns.GetHostAddresses(proxy.EndPoint.Address).First(), proxy.EndPoint.Port),
+                };
 
                 if (!string.IsNullOrEmpty(proxy.Username))
                     this.Socket.ProxyUser = proxy.Username;
 
                 if (!string.IsNullOrEmpty(proxy.Password))
                     this.Socket.ProxyUser = proxy.Password;
-
-                this.Socket.Connect(endpoint.Address, endpoint.Port);
             }
+
+            this.Socket.Connect(endpoint.Address.ToString(), endpoint.Port);
 
             this.Stream = new NetworkStream(this.Socket);
             this.MessageDeserializer = new BinaryDeserializer();

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PlayerIOClient
+﻿namespace PlayerIOClient
 {
     public enum ProxyType
     {
@@ -13,7 +9,7 @@ namespace PlayerIOClient
 
     public class ProxyOptions
     {
-        public ProxyOptions(ServerEndPoint endpoint, ProxyType type, string username, string password)
+        public ProxyOptions(ServerEndPoint endpoint, ProxyType type, string username = "", string password = "")
         {
             this.EndPoint = endpoint;
             this.Type = type;
