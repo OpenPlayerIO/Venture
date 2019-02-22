@@ -30,6 +30,9 @@ var connection = client.Multiplayer.CreateJoinRoom("room-id", "room-type");
 
 connection.OnMessage += (con, message) => Console.WriteLine(message);
 connection.Send("init");
+
+// you can optionally set a proxy prior to joining the room.
+client.Multiplayer.ProxyOptions = new ProxyOptions(new ServerEndPoint("host-ip", port), ProxyType.SOCKS5);
 ``` 
 
 ### Account Management
