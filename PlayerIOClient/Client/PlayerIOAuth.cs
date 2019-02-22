@@ -19,7 +19,7 @@ namespace PlayerIOClient
 
         internal static string SimpleUserPasswordEncrypt(byte[] certificateBytes, string password)
         {
-            var provider = new RSACryptoServiceProvider(new CspParameters{ ProviderType = 1 });
+            var provider = new RSACryptoServiceProvider(new CspParameters { ProviderType = 1 });
 
             provider.ImportCspBlob(certificateBytes);
 

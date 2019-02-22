@@ -7,6 +7,6 @@ namespace PlayerIOClient
     internal class DeleteObjectsArgs
     {
         [ProtoMember(1)]
-        public List<BigDBObjectId> ObjectIds { get; set; } 
+        public List<BigDBObjectId> ObjectIds { get; set; }
     }
 }

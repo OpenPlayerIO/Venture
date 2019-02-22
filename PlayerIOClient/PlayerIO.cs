@@ -12,8 +12,6 @@ namespace PlayerIOClient
     /// </summary>
     public static class PlayerIO
     {
-        private static string LibraryVersion => "1.6.0"; // Venture version (major.minor.patch)
-
         /// <summary>
         /// The seconds to wait for every API request before timing out. (-1 for never)
         /// </summary>
@@ -361,7 +359,7 @@ namespace PlayerIOClient
                 PartnerId = partnerId,
                 PlayerInsightSegments = playerInsightSegments,
                 ClientAPI = "csharp",
-                ClientInfo = DictionaryEx.Convert(PlayerIOAuth.GetClientInfo())
+                ClientInfo = DictionaryEx.Convert(PlayerIOAuth.GetClientInfo()),
             });
 
             if (!success)

@@ -14,7 +14,7 @@ namespace PlayerIOClient
 
         [ProtoMember(3)]
         public int OnlineUsers { get; }
-        
+
         [ProtoMember(4)]
         public Dictionary<string, string> RoomData { get; }
     }

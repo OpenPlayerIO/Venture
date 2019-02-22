@@ -288,7 +288,7 @@ namespace PlayerIOClient
 
             return new DatabaseObject(this, table, response.Objects.First().Key, response.Objects.First().Version, response.Objects.First().Properties);
         }
-        
+
         /// <summary>
         /// Delete a range of database objects from a table using an index.
         /// </summary>

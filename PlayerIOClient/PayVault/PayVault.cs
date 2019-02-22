@@ -281,7 +281,7 @@ namespace PlayerIOClient
 
             return response.Entries.ToArray();
         }
-        
+
         /// <summary>
         /// This method retrieves information about how to make a coin purchase with the specified PayVault provider. 
         /// </summary>

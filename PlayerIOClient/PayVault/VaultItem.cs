@@ -44,7 +44,7 @@ namespace PlayerIOClient
         public new string Key { get; set; }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override DatabaseObject SetProperty(string property, object value) => 
+        public override DatabaseObject SetProperty(string property, object value) =>
             throw new InvalidOperationException("You cannot set properties on a Vault Item.");
     }
 }

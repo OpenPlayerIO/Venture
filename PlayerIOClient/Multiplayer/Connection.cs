@@ -31,7 +31,7 @@ namespace PlayerIOClient
         /// </summary>
         /// <param name="message"> The reason of disconnecting explained by words. </param>
         public event DisconnectEventHandler OnDisconnect;
-        
+
         /// <summary> A boolean representing whether the connection is currently connected to a remote host. </summary>
         public bool Connected => this.Socket.Connected;
 
@@ -75,7 +75,7 @@ namespace PlayerIOClient
 
             this.Socket.NoDelay = true; // Player.IO enables the Nagle algorithm in their client.
             this.Socket.Blocking = true; // Player.IO enables the blocking mode in their client.
-            
+
             var join = new Message("join", joinKey);
 
             if (joinData != null)
@@ -98,7 +98,7 @@ namespace PlayerIOClient
         private ProxySocket Socket { get; set; }
         private Stream Stream { get; set; }
         private byte[] Buffer { get; set; } = new byte[ushort.MaxValue];
-        
+
         private readonly BinaryDeserializer MessageDeserializer;
 
         /// <summary>
@@ -239,7 +239,8 @@ namespace PlayerIOClient
             _length = -1;
             _partLength = 0;
 
-            OnDeserializedValue += (value) => {
+            OnDeserializedValue += (value) =>
+            {
                 if (_length == -1)
                 {
                     _length = (int)value;

@@ -18,7 +18,7 @@ namespace PlayerIOClient
         /// <summary> The type of this entry, for example 'buy','credit','debit' ... </summary>
         [ProtoMember(2)]
         public string Type { get; }
-        
+
         [ProtoMember(3)]
         public long Created { get; }
 
