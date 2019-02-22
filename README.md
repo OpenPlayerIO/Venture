@@ -43,7 +43,7 @@ if (PlayerIO.ChangePassword("game-id", "email", "current-password", "new-passwor
 
 ### Account Registration
 ```csharp
-var captcha = SimpleConnect.CreateCaptcha("game-id", 64, 64);
+var captcha = PlayerIO.CreateCaptcha("game-id", 64, 64);
 var key = captcha.CaptchaKey; // the required key of the captcha
 var url = captcha.CaptchaImageUrl; // an image containing the captcha text
 
