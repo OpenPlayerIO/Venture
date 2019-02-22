@@ -355,11 +355,11 @@ namespace PlayerIOClient
                 Email = email,
                 CaptchaKey = captchaKey,
                 CaptchaValue = captchaValue,
-                ExtraData = DictionaryEx.Convert(extraData),
+                ExtraData = DictionaryEx.Convert(extraData).ToList(),
                 PartnerId = partnerId,
                 PlayerInsightSegments = playerInsightSegments,
                 ClientAPI = "csharp",
-                ClientInfo = DictionaryEx.Convert(PlayerIOAuth.GetClientInfo()),
+                ClientInfo = DictionaryEx.Convert(PlayerIOAuth.GetClientInfo()).ToList(),
             });
 
             if (!success)
