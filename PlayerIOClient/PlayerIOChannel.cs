@@ -1,11 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Linq;
 using Flurl.Http;
 using ProtoBuf;
-using System;
 
 namespace PlayerIOClient
 {

@@ -117,6 +117,17 @@ namespace PlayerIOClient
 
                         model.SetProperty(kvp.Key, array);
                     }
+                    else if (kvp.Value is List<object>)
+                    {
+                        var array = new DatabaseArray();
+
+                        foreach (var value in kvp.Value as List<object>)
+                        {
+                            array.Add(FromDictionary(value));
+                        }
+
+                        model.SetProperty(kvp.Key, array);
+                    }
                     else
                     {
                         model.SetProperty(kvp.Key, kvp.Value);
