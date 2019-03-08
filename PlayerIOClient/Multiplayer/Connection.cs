@@ -42,8 +42,9 @@ namespace PlayerIOClient
         /// <param name="endpoint"> The game server endpoint. </param>
         /// <param name="joinKey"> The key provided by the API for the respective game server. </param>
         /// <param name="joinData"> An optional dictionary containing join data to send during join. </param>
+        /// <param name="proxy"> An optional proxy which, if specified, will be used during the connection. </param>
         public static Connection Create(ServerEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null, ProxyOptions proxy = null)
-            => new Connection(new IPEndPoint(Dns.GetHostAddresses(proxy.EndPoint.Address).First(), endpoint.Port), joinKey, joinData);
+            => new Connection(new IPEndPoint(Dns.GetHostAddresses(endpoint.Address).First(), endpoint.Port), joinKey, joinData, proxy);
 
         internal Connection(IPEndPoint endpoint, string joinKey, Dictionary<string, string> joinData = null, ProxyOptions proxy = null)
         {
