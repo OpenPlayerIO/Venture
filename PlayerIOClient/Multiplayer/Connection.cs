@@ -19,21 +19,37 @@ namespace PlayerIOClient
     /// </summary>
     /// <param name="message"> The reason of disconnecting explained by words. </param>
     public delegate void DisconnectEventHandler(object sender, string message);
-
+    
     /// <summary> A connection to a running Player.IO multiplayer room. </summary>
     public class Connection
     {
-        /// <summary> Used to add a message handler to the OnMessage event of an instance of Connection. </summary>
+        /// <summary>
+        /// A property used to add a message handler to the OnMessage event of an instance of Connection.
+        /// </summary>
         public event MessageReceivedEventHandler OnMessage;
 
         /// <summary>
-        /// Used to add a disconnect handler to the OnDisconnect event of an instance of Connection.
+        /// A property used to add a disconnect handler to the OnDisconnect event of an instance of Connection.
         /// </summary>
-        /// <param name="message"> The reason of disconnecting explained by words. </param>
+        /// <param name="message"> The reason for the disconnection. </param>
         public event DisconnectEventHandler OnDisconnect;
 
-        /// <summary> A boolean representing whether the connection is currently connected to a remote host. </summary>
+        /// <summary>
+        /// A boolean representing whether the connection is established with a remote host.
+        /// </summary>
         public bool Connected => this.Socket.Connected;
+
+        /// <summary>
+        /// The remote endpoint of the current connection.
+        /// </summary>
+        public IPEndPoint RemoteEndPoint => this.Socket.RemoteEndPoint as IPEndPoint;
+
+        /// <summary>
+        /// The bandwidth information pertaining to the current connection.
+        /// </summary>
+        /// <returns> A brief summary of the bandwith used by the connection. </returns>
+        public (ulong messages_sent, ulong messages_received, ulong bytes_sent, ulong bytes_received) GetBandwith() =>
+            (TotalMessagesSent, TotalMessagesReceived, TotalBytesSent, TotalBytesReceived);
 
         /// <summary>
         /// An optional means of instantiating a connection from a join key, for advanced usage purposes.
@@ -92,15 +108,11 @@ namespace PlayerIOClient
 
             this.MessageDeserializer.OnDeserializedMessage += (message) =>
             {
+                this.TotalMessagesReceived++;
+
                 OnMessage?.Invoke(this, message);
             };
         }
-
-        private ProxySocket Socket { get; set; }
-        private Stream Stream { get; set; }
-        private byte[] Buffer { get; set; } = new byte[ushort.MaxValue];
-
-        private readonly BinaryDeserializer MessageDeserializer;
 
         /// <summary>
         /// Send a message to the connected client without first having to construct a Message object.
@@ -120,6 +132,9 @@ namespace PlayerIOClient
             if (this.Socket != null && this.Socket.Connected)
             {
                 this.Socket.Send(serialized, SocketFlags.None, out var status);
+                this.TotalMessagesSent++;
+                this.TotalBytesSent += (ulong)serialized.Length;
+                
                 return (status == SocketError.Success);
             }
 
@@ -165,6 +180,8 @@ namespace PlayerIOClient
                     return;
                 }
 
+                this.TotalBytesReceived += (ulong)length;
+
                 this.MessageDeserializer.AddBytes(received);
                 this.Stream?.BeginRead(this.Buffer, 0, this.Buffer.Length, new AsyncCallback(this.ReceiveCallback), null);
             }
@@ -174,6 +191,17 @@ namespace PlayerIOClient
                 return;
             }
         }
+
+        private ulong TotalMessagesSent { get; set; } = 0;
+        private ulong TotalMessagesReceived { get; set; } = 0;
+
+        private ulong TotalBytesReceived { get; set; } = 0;
+        private ulong TotalBytesSent { get; set; } = 0;
+
+        private ProxySocket Socket { get; set; }
+        private Stream Stream { get; set; }
+        private readonly BinaryDeserializer MessageDeserializer;
+        private byte[] Buffer { get; set; } = new byte[ushort.MaxValue];
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool Equals(object obj) => base.Equals(obj);
