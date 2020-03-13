@@ -272,7 +272,7 @@ namespace PlayerIOClient
             {
                 if (_length == -1)
                 {
-                    _length = (int)value;
+                    _length = Convert.ToInt32(value);
                 }
                 else
                 {
