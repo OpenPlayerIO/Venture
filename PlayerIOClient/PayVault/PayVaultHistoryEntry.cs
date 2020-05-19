@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ProtoBuf;
-using Tson.NET;
+using Tson;
 
 namespace PlayerIOClient
 {
