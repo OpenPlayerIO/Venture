@@ -19,6 +19,13 @@ namespace PlayerIOClient
 
                 case ValueObject valueObject:
                     var value = Value(valueObject);
+
+                    if (valueObject.ValueType == ValueType.Array && value == null)
+                        return new DatabaseArray();
+
+                    if (valueObject.ValueType == ValueType.Object && value == null)
+                        return new DatabaseObject();
+
                     if (value is List<ObjectProperty> object_properties)
                     {
                         foreach (var property in object_properties)

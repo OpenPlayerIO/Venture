@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Flurl.Http" Version="2.4.0" />
+    <PackageReference Include="Flurl.Http" Version="2.4.2" />
     <PackageReference Include="protobuf-net" Version="2.4.0" />
     <PackageReference Include="tson" Version="3.0.1" />
   </ItemGroup>
