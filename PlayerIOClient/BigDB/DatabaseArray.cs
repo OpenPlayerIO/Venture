@@ -16,49 +16,49 @@ namespace PlayerIOClient
         {
         }
 
-        public new object[] Values => Properties.Values.ToArray();
-        public object this[uint index] => index < Values.Length - 1 ? Values[index] ?? null : throw new IndexOutOfRangeException(nameof(index));
+        public new object[] Values => this.Properties.Values.ToArray();
+        public object this[uint index] => index <= this.Values.Length - 1 ? this.Values[index] ?? null : throw new IndexOutOfRangeException(nameof(index));
 
-        public DatabaseArray Set(uint index, object value) => SetProperty(index.ToString(), value) as DatabaseArray;
+        public DatabaseArray Set(uint index, object value) => this.SetProperty(index.ToString(), value) as DatabaseArray;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public DatabaseArray Add(object value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(object value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given string value to the array. </summary>
-        public DatabaseArray Add(string value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(string value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given int value to the array. </summary>
-        public DatabaseArray Add(int value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(int value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given uint value to the array. </summary>
-        public DatabaseArray Add(uint value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(uint value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given long value to the array. </summary>
-        public DatabaseArray Add(long value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(long value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given ulong value to the array. </summary>
-        public DatabaseArray Add(ulong value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(ulong value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given float value to the array. </summary>
-        public DatabaseArray Add(float value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(float value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given double value to the array. </summary>
-        public DatabaseArray Add(double value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(double value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given boolean value to the array. </summary>
-        public DatabaseArray Add(bool value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(bool value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given byte array value to the array. </summary>
-        public DatabaseArray Add(byte[] value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(byte[] value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given date time value to the array. </summary>
-        public DatabaseArray Add(DateTime value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(DateTime value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given object to the array. </summary>
-        public DatabaseArray Add(DatabaseObject value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(DatabaseObject value) => this.Set((uint)this.Properties.Count, value);
 
         /// <summary> Add the given array to the array. </summary>
-        public DatabaseArray Add(DatabaseArray value) => Set((uint)this.Properties.Count, value);
+        public DatabaseArray Add(DatabaseArray value) => this.Set((uint)this.Properties.Count, value);
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override DatabaseObject SetProperty(string index, object value)
@@ -72,37 +72,37 @@ namespace PlayerIOClient
             return base.SetProperty(index, value);
         }
 
-        public bool GetBool(uint index) => GetBool(index.ToString());
-        public bool GetBool(uint index, bool defaultValue) => GetBool(index.ToString(), defaultValue);
+        public bool GetBool(uint index) => this.GetBool(index.ToString());
+        public bool GetBool(uint index, bool defaultValue) => this.GetBool(index.ToString(), defaultValue);
 
-        public byte[] GetBytes(uint index) => GetBytes(index.ToString());
-        public byte[] GetBytes(uint index, byte[] defaultValue) => GetBytes(index.ToString(), defaultValue);
+        public byte[] GetBytes(uint index) => this.GetBytes(index.ToString());
+        public byte[] GetBytes(uint index, byte[] defaultValue) => this.GetBytes(index.ToString(), defaultValue);
 
-        public double GetDouble(uint index) => GetDouble(index.ToString());
-        public double GetDouble(uint index, double defaultValue) => GetDouble(index.ToString(), defaultValue);
+        public double GetDouble(uint index) => this.GetDouble(index.ToString());
+        public double GetDouble(uint index, double defaultValue) => this.GetDouble(index.ToString(), defaultValue);
 
-        public float GetFloat(uint index) => GetFloat(index.ToString());
-        public float GetFloat(uint index, float defaultValue) => GetFloat(index.ToString(), defaultValue);
+        public float GetFloat(uint index) => this.GetFloat(index.ToString());
+        public float GetFloat(uint index, float defaultValue) => this.GetFloat(index.ToString(), defaultValue);
 
-        public int GetInt(uint index) => GetInt(index.ToString());
-        public int GetInt(uint index, int defaultValue) => GetInt(index.ToString(), defaultValue);
+        public int GetInt(uint index) => this.GetInt(index.ToString());
+        public int GetInt(uint index, int defaultValue) => this.GetInt(index.ToString(), defaultValue);
 
-        public uint GetUInt(uint index) => GetUInt(index.ToString());
-        public uint GetUInt(uint index, uint defaultValue) => GetUInt(index.ToString(), defaultValue);
+        public uint GetUInt(uint index) => this.GetUInt(index.ToString());
+        public uint GetUInt(uint index, uint defaultValue) => this.GetUInt(index.ToString(), defaultValue);
 
-        public long GetLong(uint index) => GetLong(index.ToString());
-        public long GetLong(uint index, long defaultValue) => GetLong(index.ToString(), defaultValue);
+        public long GetLong(uint index) => this.GetLong(index.ToString());
+        public long GetLong(uint index, long defaultValue) => this.GetLong(index.ToString(), defaultValue);
 
-        public string GetString(uint index) => GetString(index.ToString());
-        public string GetString(uint index, string defaultValue) => GetString(index.ToString(), defaultValue);
+        public string GetString(uint index) => this.GetString(index.ToString());
+        public string GetString(uint index, string defaultValue) => this.GetString(index.ToString(), defaultValue);
 
-        public DatabaseObject GetObject(uint index) => GetObject(index.ToString());
-        public DatabaseObject GetObject(uint index, DatabaseObject defaultValue) => GetObject(index.ToString(), defaultValue);
+        public DatabaseObject GetObject(uint index) => this.GetObject(index.ToString());
+        public DatabaseObject GetObject(uint index, DatabaseObject defaultValue) => this.GetObject(index.ToString(), defaultValue);
 
-        public DatabaseArray GetArray(uint index) => GetArray(index.ToString());
-        public DatabaseArray GetArray(uint index, DatabaseArray defaultValue) => GetArray(index.ToString(), defaultValue);
+        public DatabaseArray GetArray(uint index) => this.GetArray(index.ToString());
+        public DatabaseArray GetArray(uint index, DatabaseArray defaultValue) => this.GetArray(index.ToString(), defaultValue);
 
-        public new IEnumerator<object> GetEnumerator() => ((IEnumerable<object>)Values).GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<object>)Values).GetEnumerator();
+        public new IEnumerator<object> GetEnumerator() => ((IEnumerable<object>)this.Values).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<object>)this.Values).GetEnumerator();
     }
 }

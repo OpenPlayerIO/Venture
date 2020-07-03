@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Venture</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Atilla Lonny, EEJesse</Authors>
@@ -10,9 +10,9 @@
     <Description>An open-source alternative to PlayerIOClient for .NET Core.</Description>
     <Copyright>MIT License</Copyright>
     <RepositoryUrl>https://github.com/OpenPlayerIO/Venture</RepositoryUrl>
-    <AssemblyVersion>1.7.0.0</AssemblyVersion>
-    <FileVersion>1.7.0.0</FileVersion>
-    <Version>1.7.0</Version>
+    <AssemblyVersion>1.7.2.0</AssemblyVersion>
+    <FileVersion>1.7.2.0</FileVersion>
+    <Version>1.7.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +24,7 @@
   <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="2.4.2" />
     <PackageReference Include="protobuf-net" Version="2.4.0" />
-    <PackageReference Include="tson" Version="3.0.1" />
+    <PackageReference Include="tson" Version="3.0.2" />
   </ItemGroup>
 
 </Project>

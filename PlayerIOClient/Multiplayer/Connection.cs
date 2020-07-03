@@ -131,7 +131,7 @@ namespace PlayerIOClient
 
             if (this.Socket != null && this.Socket.Connected)
             {
-                this.Socket.Send(serialized, SocketFlags.None, out var status);
+                this.Socket.Send(serialized, 0, serialized.Length, SocketFlags.None, out var status);
                 this.TotalMessagesSent++;
                 this.TotalBytesSent += (ulong)serialized.Length;
                 
