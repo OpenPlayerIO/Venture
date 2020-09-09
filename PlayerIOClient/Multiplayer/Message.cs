@@ -113,31 +113,31 @@ namespace PlayerIOClient
         public ulong GetUnsignedLong(uint index) => (ulong)this[index];
 
         /// <summary> Add a string to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(string value) => Add(value);
+        public void Add(string value) => _add(value);
 
         /// <summary> Add a string to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(int value) => Add(value);
+        public void Add(int value) => _add(value);
 
         /// <summary> Add a uint to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(uint value) => Add(value);
+        public void Add(uint value) => _add(value);
 
         /// <summary> Add a long to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(long value) => Add(value);
+        public void Add(long value) => _add(value);
 
         /// <summary> Add a ulong to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(ulong value) => Add(value);
+        public void Add(ulong value) => _add(value);
 
         /// <summary> Add a byte[] to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(byte[] value) => Add(value);
+        public void Add(byte[] value) => _add(value);
 
         /// <summary> Add a float to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(float value) => Add(value);
+        public void Add(float value) => _add(value);
 
         /// <summary> Add a double to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(double value) => Add(value);
+        public void Add(double value) => _add(value);
 
         /// <summary> Add a bool to the message payload </summary><param name="value"> The value to add </param>
-        public void Add(bool value) => Add(value);
+        public void Add(bool value) => _add(value);
 
         /// <summary>
         /// Add multiple objects to the message in one go.
@@ -148,6 +148,11 @@ namespace PlayerIOClient
         /// </example>
         /// <param name="parameters"> The objects to add to the message. </param>
         public void Add(params object[] parameters)
+        {
+            _add(parameters);
+        }
+
+        private void _add(params object[] parameters)
         {
             if (parameters.Length == 0)
                 return;
