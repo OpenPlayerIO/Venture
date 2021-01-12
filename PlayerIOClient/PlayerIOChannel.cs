@@ -15,7 +15,7 @@ namespace PlayerIOClient
 
         public (bool success, TResponse response, PlayerIOError error) Request<TRequest, TResponse>(int method, TRequest args)
         {
-            var channel = new FlurlClient("https://api.playerio.com/");
+            var channel = new FlurlClient(PlayerIO.APIEndPoint);
 
             var stream = new MemoryStream();
             Serializer.Serialize(stream, args);

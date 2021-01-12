@@ -17,6 +17,11 @@ namespace PlayerIOClient
         public static int APIRequestTimeout { get; set; } = -1;
 
         /// <summary>
+        /// The API endpoint. (default: https://api.playerio.com)
+        /// </summary>
+        public static string APIEndPoint { get; set; } = "https://api.playerio.com";
+
+        /// <summary>
         /// Authenticate with SimpleUser connection type using the username or email address and password provided.
         /// </summary>
         public static Client SimpleConnect(string gameId, string usernameOrEmail, string password, string connectionId = "public")
