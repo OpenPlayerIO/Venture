@@ -1,6 +1,6 @@
 ﻿namespace PlayerIOClient
 {
-    internal enum APISecurity
+    public enum APISecurity : int
     {
         RespectClientSetting,
         UseHttp,

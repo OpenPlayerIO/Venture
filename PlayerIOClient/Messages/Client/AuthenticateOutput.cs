@@ -22,13 +22,13 @@ namespace PlayerIOClient
         public PlayerInsightState PlayerInsightState { get; set; }
 
         [ProtoMember(6)]
-        public AuthenticateStartDialog[] StartDialogs { get; set; }
+        public List<AuthenticateStartDialog> StartDialogs { get; set; }
 
         [ProtoMember(7)]
         public bool IsSocialNetworkUser { get; set; }
 
         [ProtoMember(8)]
-        public string NewPlayCodes { get; set; }
+        public List<string> NewPlayCodes { get; set; }
 
         [ProtoMember(9)]
         public string NotificationClickPayload { get; set; }

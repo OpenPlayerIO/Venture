@@ -262,7 +262,7 @@ namespace PlayerIOClient
                 ConnectionId = connectionId,
                 AuthenticationArguments = DictionaryEx.Convert(authenticationArguments ?? new Dictionary<string, string>()),
                 PlayerInsightSegments = playerInsightSegments?.ToList() ?? new List<string>(),
-                ClientAPI = $"csharp",
+                ClientAPI = "csharp",
                 ClientInfo = DictionaryEx.Convert(PlayerIOAuth.GetClientInfo()),
                 PlayCodes = new List<string>()
             });

@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using System.Collections.Generic;
 
 namespace PlayerIOClient
 {
@@ -9,6 +10,6 @@ namespace PlayerIOClient
         public int PlayersOnline { get; set; }
 
         [ProtoMember(2)]
-        public KeyValuePair[] Segments { get; set; }
+        public List<KeyValuePair> Segments { get; set; }
     }
 }

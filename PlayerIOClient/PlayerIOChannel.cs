@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Linq;
 using Flurl.Http;
 using ProtoBuf;
 
@@ -28,21 +27,24 @@ namespace PlayerIOClient
                                        .Request($"api/{method}")
                                        .PostAsync(new ByteArrayContent(this.ReadAllBytes(stream))).ReceiveBytes().Result;
 
-                if (this.ReadHeader(new MemoryStream(response)))
+                using (var responseStream = new MemoryStream(response))
                 {
-                    return (true, Serializer.Deserialize<TResponse>(new MemoryStream(response.Skip(2).ToArray())), null);
-                }
-                else
-                {
-                    if (method != 403)
+                    if (this.ReadHeader(responseStream))
                     {
-                        var error = Serializer.Deserialize<ErrorOutput>(new MemoryStream(response.Skip(2).ToArray()));
-                        return (false, default(TResponse), new PlayerIOError(error.ErrorCode, error.Message));
+                        return (true, Serializer.Deserialize<TResponse>(responseStream), null);
                     }
                     else
                     {
-                        var error = Serializer.Deserialize<PlayerIORegistrationErrorOutput>(new MemoryStream(response.Skip(2).ToArray()));
-                        return (false, default(TResponse), new PlayerIORegistrationError((ErrorCode)error.ErrorCode, error.Message, error.UsernameError, error.PasswordError, error.EmailError, error.CaptchaError));
+                        if (method != 403)
+                        {
+                            var error = Serializer.Deserialize<ErrorOutput>(responseStream);
+                            return (false, default(TResponse), new PlayerIOError(error.ErrorCode, error.Message));
+                        }
+                        else
+                        {
+                            var error = Serializer.Deserialize<PlayerIORegistrationErrorOutput>(responseStream);
+                            return (false, default(TResponse), new PlayerIORegistrationError((ErrorCode)error.ErrorCode, error.Message, error.UsernameError, error.PasswordError, error.EmailError, error.CaptchaError));
+                        }
                     }
                 }
             }
