@@ -37,7 +37,7 @@ namespace PlayerIOClient
         public bool IsInstalledByPublishingNetwork { get; set; }
 
         [ProtoMember(11)]
-        public string Deprecated1 { get; set; }
+        public List<string> Deprecated1 { get; set; }
 
         [ProtoMember(12)]
         public APISecurity ApiSecurity { get; set; }
