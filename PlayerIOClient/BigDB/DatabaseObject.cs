@@ -145,10 +145,7 @@ namespace PlayerIOClient
         public DateTime GetDateTime(string prop, DateTime defaultValue) => this[prop] is DateTime value ? value : defaultValue;
 
         public DatabaseObject GetObject(string prop) => (DatabaseObject)this[prop, typeof(DatabaseObject)];
-        public DatabaseObject GetObject(string prop, DatabaseObject defaultValue) => this[prop] is DatabaseObject value ? value : new DatabaseObject(this.Owner, this.Table, this.Key, this.Version, new List<ObjectProperty>());
-
         public DatabaseArray GetArray(string prop) => (DatabaseArray)this[prop, typeof(DatabaseArray)];
-        public DatabaseArray GetArray(string prop, DatabaseArray defaultValue) => this[prop] is DatabaseArray value ? value : new DatabaseArray(this.Owner, this.Table, this.Key, this.Version, new List<ObjectProperty>());
 
         /// <summary>
         /// Check whether this object contains the specified property.
