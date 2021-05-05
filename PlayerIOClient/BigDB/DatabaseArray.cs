@@ -97,10 +97,7 @@ namespace PlayerIOClient
         public string GetString(uint index, string defaultValue) => this.GetString(index.ToString(), defaultValue);
 
         public DatabaseObject GetObject(uint index) => this.GetObject(index.ToString());
-        public DatabaseObject GetObject(uint index, DatabaseObject defaultValue) => this.GetObject(index.ToString(), defaultValue);
-
         public DatabaseArray GetArray(uint index) => this.GetArray(index.ToString());
-        public DatabaseArray GetArray(uint index, DatabaseArray defaultValue) => this.GetArray(index.ToString(), defaultValue);
 
         public new IEnumerator<object> GetEnumerator() => ((IEnumerable<object>)this.Values).GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<object>)this.Values).GetEnumerator();
